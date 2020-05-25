@@ -18,9 +18,9 @@
 package com.intellectualsites.irongolem.logging;
 
 import com.intellectualsites.irongolem.changes.Change;
-import com.sun.istack.internal.NotNull;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

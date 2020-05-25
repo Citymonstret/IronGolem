@@ -19,7 +19,9 @@ package com.intellectualsites.irongolem.listeners;
 
 import com.intellectualsites.irongolem.changes.BlockSubject;
 import com.intellectualsites.irongolem.changes.Change;
+import com.intellectualsites.irongolem.changes.ChangeReason;
 import com.intellectualsites.irongolem.changes.PlayerSource;
+import com.intellectualsites.irongolem.logging.ChangeLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
@@ -31,19 +33,32 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
+import org.jetbrains.annotations.NotNull;
 
 public class BlockListener implements Listener {
 
+    private final ChangeLogger logger;
+
+    public BlockListener(@NotNull final ChangeLogger logger) {
+        this.logger = logger;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(final BlockBreakEvent event) {
-        Change change = Change.newBuilder().atLocation(event.getBlock().getLocation())
+        final Change change = Change.newBuilder().atLocation(event.getBlock().getLocation())
             .withSource(PlayerSource.of(event.getPlayer())).withSubject(BlockSubject.of(event.getBlock().getBlockData(),
-                Bukkit.createBlockData(Material.AIR))).build();
+                Bukkit.createBlockData(Material.AIR))).withReason(ChangeReason.BLOCK_BREAK).build();
+        logger.logChange(change);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(final BlockPlaceEvent event) {
-
+        final Change change = Change.newBuilder().atLocation(event.getBlock().getLocation())
+            .withSource(PlayerSource.of(event.getPlayer()))
+            .withSubject(BlockSubject.of(event.getBlockReplacedState().getBlockData(),
+                event.getBlockPlaced().getBlockData()))
+            .withReason(ChangeReason.BLOCK_PLACE).build();
+        logger.logChange(change);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

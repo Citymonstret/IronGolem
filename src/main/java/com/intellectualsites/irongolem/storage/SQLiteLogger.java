@@ -18,9 +18,11 @@
 package com.intellectualsites.irongolem.storage;
 
 import com.intellectualsites.irongolem.changes.Change;
+import com.intellectualsites.irongolem.changes.ChangeSubject;
 import com.intellectualsites.irongolem.logging.ScheduledQueuingChangeLogger;
-import com.sun.istack.internal.NotNull;
+import org.bukkit.Location;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,7 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.util.Objects;
 
 /**
  * {@link com.intellectualsites.irongolem.logging.ChangeLogger} that logs to SQLite
@@ -42,7 +45,7 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
         + "\tworld VARCHAR(36) not null," + "\tx INTEGER not null," + "\ty INTEGER not null,"
         + "\tz INTEGER not null," + "\ttimestamp INTEGER not null,"
         + "\tsource VARCHAR(36) not null," + "\ttype varchar(16)," + "\t\"from\" TEXT,"
-        + "\t\"to\" TEXT, reason varchar(64)";
+        + "\t\"to\" TEXT, reason varchar(64))";
 
     private final Object statementLock = new Object();
 
@@ -64,13 +67,25 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
     @Override protected void startBatch() throws Exception {
         synchronized (this.statementLock) {
             this.statement = this.getConnection().prepareStatement(
-                "INSERT INTO `event`(`world`, `x`, `y`, `z`, `timestamp`, `source`, `type`, `to`, `reason`)" +
-                    " VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
+                "INSERT INTO `events`(`world`, `x`, `y`, `z`, `timestamp`, `source`, `type`, `from`, `to`, `reason`)" +
+                    " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         }
     }
 
-    @Override protected void persist(final Change change) throws Exception {
+    @Override protected void persist(@NotNull final Change change) throws Exception {
         synchronized (this.statementLock) {
+            final Location location = change.getLocation();
+            final ChangeSubject subject = change.getSubject();
+            this.statement.setString(1, Objects.requireNonNull(location.getWorld()).getName());
+            this.statement.setInt(2, location.getBlockX());
+            this.statement.setInt(3, location.getBlockY());
+            this.statement.setInt(4, location.getBlockZ());
+            this.statement.setLong(5, change.getTimestamp());
+            this.statement.setString(6, change.getSource().getName());
+            this.statement.setString(7, subject.getType().name());
+            this.statement.setString(8, subject.serializeFrom());
+            this.statement.setString(9, subject.serializeTo());
+            this.statement.setString(10, change.getReason().name());
             // Set params
             this.statement.addBatch();
         }

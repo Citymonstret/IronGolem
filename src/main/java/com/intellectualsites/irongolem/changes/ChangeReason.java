@@ -15,34 +15,9 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //
 
-package com.intellectualsites.irongolem.logging;
+package com.intellectualsites.irongolem.changes;
 
-import com.intellectualsites.irongolem.changes.Change;
-import org.jetbrains.annotations.NotNull;
-
-
-/**
- * This interface represents any utility that is able to log {@link Change changes}
- */
-public interface ChangeLogger {
-
-    /**
-     * Start the logger
-     *
-     * @return True if the logger managed to start
-     */
-    boolean startLogging();
-
-    /**
-     * Log a {@link Change}
-     *
-     * @param change Change to log
-     */
-    void logChange(@NotNull final Change change);
-
-    /**
-     * Stop the block logger
-     */
-    void stopLogger();
-
+public enum ChangeReason {
+    BLOCK_BREAK,
+    BLOCK_PLACE
 }

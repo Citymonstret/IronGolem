@@ -29,11 +29,15 @@ public class Change {
     private final ChangeSource source;
     private final Location location;
     private final ChangeSubject subject;
+    private final ChangeReason reason;
+    private final long timestamp = System.currentTimeMillis();
 
-    private Change(@NotNull final ChangeSource source, @NotNull final Location location, @NotNull final ChangeSubject subject) {
+    private Change(@NotNull final ChangeSource source, @NotNull final Location location,
+        @NotNull final ChangeSubject subject, @NotNull final ChangeReason reason) {
         this.source = source;
         this.location = location;
         this.subject = subject;
+        this.reason = reason;
     }
 
     public static ChangeBuilder newBuilder() {
@@ -58,8 +62,31 @@ public class Change {
         return this.location;
     }
 
+    /**
+     * Get the subject of the change
+     *
+     * @return Change subject
+     */
     @NotNull public ChangeSubject getSubject() {
         return this.subject;
+    }
+
+    /**
+     * Get the change reason
+     *
+     * @return Change reason
+     */
+    @NotNull public ChangeReason getReason() {
+        return this.reason;
+    }
+
+    /**
+     * Get the event time stamp
+     *
+     * @return Time stamp
+     */
+    public long getTimestamp() {
+        return this.timestamp;
     }
 
     public static final class ChangeBuilder {
@@ -67,6 +94,7 @@ public class Change {
         private ChangeSource source;
         private Location location;
         private ChangeSubject subject;
+        private ChangeReason reason;
 
         @NotNull public ChangeBuilder withSource(@NotNull final ChangeSource source) {
             this.source = Preconditions.checkNotNull(source, "Source cannot be null");
@@ -83,11 +111,17 @@ public class Change {
             return this;
         }
 
+        @NotNull public ChangeBuilder withReason(@NotNull final ChangeReason reason) {
+            this.reason = Preconditions.checkNotNull(reason, "Reason may not be null");
+            return this;
+        }
+
         public Change build() {
             Preconditions.checkNotNull(source, "Source needs to be set");
             Preconditions.checkNotNull(location, "Location needs to be set");
             Preconditions.checkNotNull(location, "Subject may not be null");
-            return new Change(this.source, this.location, this.subject);
+            Preconditions.checkNotNull(reason, "Reason may not be null");
+            return new Change(this.source, this.location, this.subject, this.reason);
         }
 
     }

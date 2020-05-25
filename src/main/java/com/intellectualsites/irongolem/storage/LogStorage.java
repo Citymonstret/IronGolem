@@ -20,7 +20,7 @@ package com.intellectualsites.irongolem.storage;
 import com.intellectualsites.irongolem.changes.Change;
 import com.intellectualsites.irongolem.changes.ChangeQuery;
 import com.intellectualsites.irongolem.logging.ChangeLogger;
-import com.sun.istack.internal.NotNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
