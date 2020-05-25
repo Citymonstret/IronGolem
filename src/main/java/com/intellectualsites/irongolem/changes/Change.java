@@ -1,0 +1,95 @@
+//
+// IronGolem - A Minecraft block logging plugin
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <http://www.gnu.org/licenses/>.
+//
+
+package com.intellectualsites.irongolem.changes;
+
+import com.google.common.base.Preconditions;
+import org.bukkit.Location;
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * A "change" is any action that IronGolem can log, and restore
+ */
+public class Change {
+
+    private final ChangeSource source;
+    private final Location location;
+    private final ChangeSubject subject;
+
+    private Change(@NotNull final ChangeSource source, @NotNull final Location location, @NotNull final ChangeSubject subject) {
+        this.source = source;
+        this.location = location;
+        this.subject = subject;
+    }
+
+    public static ChangeBuilder newBuilder() {
+        return new ChangeBuilder();
+    }
+
+    /**
+     * Get the source of the change
+     *
+     * @return Change source
+     */
+    @NotNull public ChangeSource getSource() {
+        return this.source;
+    }
+
+    /**
+     * Get the change location
+     *
+     * @return Change location
+     */
+    @NotNull public Location getLocation() {
+        return this.location;
+    }
+
+    @NotNull public ChangeSubject getSubject() {
+        return this.subject;
+    }
+
+    public static final class ChangeBuilder {
+
+        private ChangeSource source;
+        private Location location;
+        private ChangeSubject subject;
+
+        @NotNull public ChangeBuilder withSource(@NotNull final ChangeSource source) {
+            this.source = Preconditions.checkNotNull(source, "Source cannot be null");
+            return this;
+        }
+
+        @NotNull public ChangeBuilder atLocation(@NotNull final Location location) {
+            this.location = Preconditions.checkNotNull(location, "Location may not be null");
+            return this;
+        }
+
+        @NotNull public ChangeBuilder withSubject(@NotNull final ChangeSubject subject) {
+            this.subject = Preconditions.checkNotNull(subject, "Subject may not be null");
+            return this;
+        }
+
+        public Change build() {
+            Preconditions.checkNotNull(source, "Source needs to be set");
+            Preconditions.checkNotNull(location, "Location needs to be set");
+            Preconditions.checkNotNull(location, "Subject may not be null");
+            return new Change(this.source, this.location, this.subject);
+        }
+
+    }
+
+}
