@@ -34,12 +34,8 @@ public class PlayerSource extends ChangeSource {
         this(player.getUniqueId());
     }
 
-    public PlayerSource(@NotNull final UUID uuid) {
+    private PlayerSource(@NotNull final UUID uuid) {
         this.uuid = uuid;
-    }
-
-    @Override public String getName() {
-        return this.uuid.toString();
     }
 
     /**
@@ -50,6 +46,20 @@ public class PlayerSource extends ChangeSource {
      */
     @NotNull public static PlayerSource of(@NotNull final Player player) {
         return new PlayerSource(Preconditions.checkNotNull(player, "Player not be null"));
+    }
+
+    /**
+     * Create a new player source
+     *
+     * @param uuid Player UUID
+     * @return Created source
+     */
+    @NotNull public static PlayerSource of(@NotNull final UUID uuid) {
+        return new PlayerSource(Preconditions.checkNotNull(uuid, "UUID may not be null"));
+    }
+
+    @Override public String getName() {
+        return this.uuid.toString();
     }
 
 }

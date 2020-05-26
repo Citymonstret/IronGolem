@@ -7,3 +7,11 @@ softdepend: [WorldEdit]
 authors: [Citymonstret]
 description: Minecraft block logging plugin
 website: https://intellectualsites.com
+commands:
+  irongolem:
+    aliases: [ig]
+    description: IronGolem main command
+    permission: irongolem.use
+permissions:
+  irongolem.use:
+    default: op

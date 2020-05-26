@@ -18,7 +18,11 @@
 package com.intellectualsites.irongolem.logging;
 
 import com.intellectualsites.irongolem.changes.Change;
+import com.intellectualsites.irongolem.changes.ChangeQuery;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 
 /**
@@ -44,5 +48,14 @@ public interface ChangeLogger {
      * Stop the block logger
      */
     void stopLogger();
+
+    /**
+     * Query for changes
+     *
+     * @param query Query
+     * @return Future that completes with the changes. The change list will
+     *         be ordered in reverse chronological order.
+     */
+    CompletableFuture<List<Change>> queryChanges(@NotNull final ChangeQuery query);
 
 }

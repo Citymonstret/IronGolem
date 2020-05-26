@@ -17,26 +17,125 @@
 
 package com.intellectualsites.irongolem.changes;
 
+import com.google.common.base.Preconditions;
+import com.intellectualsites.irongolem.IronGolem;
+import com.intellectualsites.irongolem.util.CuboidRegion;
+import com.intellectualsites.irongolem.util.PointRegion;
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * A query for {@link Change changes}
  */
-public abstract class ChangeQuery {
+public class ChangeQuery {
 
-    private final Location location;
+    private CuboidRegion region;
+    private World world;
+    private int limit = Short.MAX_VALUE;
 
-    public ChangeQuery(final Location location) {
-        this.location = location;
+    private ChangeQuery() {
     }
 
     /**
-     * Get the event location
+     * Create a new {@link ChangeQuery}
      *
-     * @return Event location
+     * @return New query
      */
-    public Location getLocation() {
-        return this.location;
+    public static ChangeQuery newQuery() {
+        return new ChangeQuery();
+    }
+
+    /**
+     * Query for changes in a specific {@link World}
+     *
+     * @param world World to query in
+     * @return The query instance
+     */
+    public ChangeQuery inWorld(@NotNull final World world) {
+        this.world = Preconditions.checkNotNull(world, "World may not be null");
+        return this;
+    }
+
+    /**
+     * Query for changes in a {@link CuboidRegion cuboid region}
+     *
+     * @param region Region
+     * @return The query instance
+     */
+    public ChangeQuery inRegion(@NotNull final CuboidRegion region) {
+        this.region = Preconditions.checkNotNull(region, "Region may not be null");
+        return this;
+    }
+
+    /**
+     * Query for changes at a specific location
+     *
+     * @param location Location
+     * @return The query instance
+     */
+    public ChangeQuery atLocation(@NotNull final Location location) {
+        Preconditions.checkNotNull(location, "Location may not be null");
+        this.world = location.getWorld();
+        this.region = PointRegion.at(location.toVector());
+        return this;
+    }
+
+    /**
+     * Limit the amount of {@link Change changes} that are queried for
+     *
+     * @param limit Change limit
+     * @return The query instance
+     */
+    public ChangeQuery withLimit(int limit) {
+        if (limit == -1) {
+            limit = Integer.MAX_VALUE;
+        }
+        Preconditions.checkState(limit > 0, "Limit has to be positive");
+        this.limit = limit;
+        return this;
+    }
+
+    /**
+     * Get the region that is queried in
+     *
+     * @return Region
+     */
+    public CuboidRegion getRegion() {
+        return this.region;
+    }
+
+    /**
+     * Get the world that is queried in
+     *
+     * @return World
+     */
+    public World getWorld() {
+        return this.world;
+    }
+
+    /**
+     * Get the query size limit
+     *
+     * @return Query size limit
+     */
+    public int getLimit() {
+        return this.limit;
+    }
+
+    /**
+     * Query for the results
+     *
+     * @return Future that completes with the results in reverse chronological order
+     */
+    public CompletableFuture<List<Change>> queryChanges() {
+        Preconditions.checkNotNull(this.world, "World may not be null");
+        Preconditions.checkNotNull(this.region, "Region may not be null");
+        Preconditions.checkState(this.limit > 0, "Limit has to be positive");
+        return IronGolem.getPlugin(IronGolem.class).getChangeLogger().queryChanges(this);
     }
 
 }

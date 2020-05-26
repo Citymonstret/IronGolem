@@ -30,14 +30,15 @@ public class Change {
     private final Location location;
     private final ChangeSubject subject;
     private final ChangeReason reason;
-    private final long timestamp = System.currentTimeMillis();
+    private final long timestamp;
 
     private Change(@NotNull final ChangeSource source, @NotNull final Location location,
-        @NotNull final ChangeSubject subject, @NotNull final ChangeReason reason) {
+        @NotNull final ChangeSubject subject, @NotNull final ChangeReason reason, final long timestamp) {
         this.source = source;
         this.location = location;
         this.subject = subject;
         this.reason = reason;
+        this.timestamp = timestamp;
     }
 
     public static ChangeBuilder newBuilder() {
@@ -95,6 +96,7 @@ public class Change {
         private Location location;
         private ChangeSubject subject;
         private ChangeReason reason;
+        private long time = System.currentTimeMillis();
 
         @NotNull public ChangeBuilder withSource(@NotNull final ChangeSource source) {
             this.source = Preconditions.checkNotNull(source, "Source cannot be null");
@@ -116,12 +118,17 @@ public class Change {
             return this;
         }
 
+        @NotNull public ChangeBuilder atTime(final long time) {
+            this.time = time;
+            return this;
+        }
+
         public Change build() {
             Preconditions.checkNotNull(source, "Source needs to be set");
             Preconditions.checkNotNull(location, "Location needs to be set");
             Preconditions.checkNotNull(location, "Subject may not be null");
             Preconditions.checkNotNull(reason, "Reason may not be null");
-            return new Change(this.source, this.location, this.subject, this.reason);
+            return new Change(this.source, this.location, this.subject, this.reason, this.time);
         }
 
     }

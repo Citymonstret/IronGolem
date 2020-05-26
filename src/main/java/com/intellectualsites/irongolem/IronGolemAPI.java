@@ -15,30 +15,19 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //
 
-package com.intellectualsites.irongolem.storage;
+package com.intellectualsites.irongolem;
 
-import com.intellectualsites.irongolem.changes.Change;
-import com.intellectualsites.irongolem.changes.ChangeQuery;
 import com.intellectualsites.irongolem.logging.ChangeLogger;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-
-/**
- * A {@link LogStorage} is any object that is able to persist
- * {@link Change changes}
- * and retrieve them at a later stage
- */
-public interface LogStorage extends ChangeLogger {
+public interface IronGolemAPI {
 
     /**
-     * Query for changes
+     * Get the change logger implementation used
+     * on the server
      *
-     * @param query Query
-     * @return Future that completes with the changes. This will never return null,
-     *         but may complete exceptionally if anything goes wrong.
+     * @return Change logger
      */
-    CompletableFuture<Collection<Change>> queryChanges(@NotNull final ChangeQuery query);
+    @NotNull ChangeLogger getChangeLogger();
 
 }
