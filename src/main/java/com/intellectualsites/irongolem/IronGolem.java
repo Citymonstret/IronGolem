@@ -21,6 +21,8 @@ import com.intellectualsites.irongolem.commands.CommandManager;
 import com.intellectualsites.irongolem.listeners.BlockListener;
 import com.intellectualsites.irongolem.listeners.InspectorListener;
 import com.intellectualsites.irongolem.logging.ChangeLogger;
+import com.intellectualsites.irongolem.restoration.QueueRestorationHandler;
+import com.intellectualsites.irongolem.restoration.RestorationHandler;
 import com.intellectualsites.irongolem.storage.SQLiteLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
@@ -36,6 +38,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(IronGolem.class);
 
     private ChangeLogger changeLogger;
+    private RestorationHandler restorationHandler;
 
     @Override public void onEnable() {
         if (!this.getDataFolder().exists() && !this.getDataFolder().mkdir()) {
@@ -43,6 +46,11 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
         }
         try {
             this.changeLogger = new SQLiteLogger(this, 20);
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            this.restorationHandler = new QueueRestorationHandler(this);
         } catch (final Exception e) {
             e.printStackTrace();
         }
@@ -60,6 +68,10 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
 
     @NotNull public ChangeLogger getChangeLogger() {
         return this.changeLogger;
+    }
+
+    @NotNull @Override public RestorationHandler getRestorationHandler() {
+        return this.restorationHandler;
     }
 
     @Override public void onDisable() {

@@ -115,16 +115,32 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
             synchronized (this.statementLock) {
                 try {
                     final CuboidRegion region = query.getRegion();
-                    try (final PreparedStatement statement = this.getConnection().prepareStatement(
-                        "SELECT * FROM `events` WHERE `world` = ? AND `x` >= ? AND `x` <= ? AND `y` >= ? AND `y` <= ? AND `z` >= ? AND `z` <= ? LIMIT ?")) {
-                        statement.setString(1, query.getWorld().getName());
-                        statement.setInt(2, region.getMinimumPoint().getBlockX());
-                        statement.setInt(3, region.getMaximumPoint().getBlockX());
-                        statement.setInt(4, region.getMinimumPoint().getBlockY());
-                        statement.setInt(5, region.getMaximumPoint().getBlockY());
-                        statement.setInt(6, region.getMinimumPoint().getBlockZ());
-                        statement.setInt(7, region.getMaximumPoint().getBlockZ());
-                        statement.setInt(8, query.getLimit());
+
+                    final StringBuilder builder = new StringBuilder("SELECT * FROM `events` WHERE `world` = ? AND `x` >= ? AND `x` <= ? AND `y` >= ? AND `y` <= ? AND `z` >= ? AND `z` <= ?");
+                    if (query.shouldUseDistinct()) {
+                        builder.append(" AND `event_id` IN (SELECT MIN(`event_id`) FROM `events` WHERE `world` = ? AND `x` >= ? AND `x` <= ? AND `y` >= ? AND `y` <= ? AND `z` >= ? AND `z` <= ? GROUP BY `world`, `x`, `y`, `z`)");
+                    }
+                    builder.append(" LIMIT ?");
+
+                    try (final PreparedStatement statement = this.getConnection().prepareStatement(builder.toString())) {
+                        int index = 1;
+                        statement.setString(index++, query.getWorld().getName());
+                        statement.setInt(index++, region.getMinimumPoint().getBlockX());
+                        statement.setInt(index++, region.getMaximumPoint().getBlockX());
+                        statement.setInt(index++, region.getMinimumPoint().getBlockY());
+                        statement.setInt(index++, region.getMaximumPoint().getBlockY());
+                        statement.setInt(index++, region.getMinimumPoint().getBlockZ());
+                        statement.setInt(index++, region.getMaximumPoint().getBlockZ());
+                        if (query.shouldUseDistinct()) {
+                            statement.setString(index++, query.getWorld().getName());
+                            statement.setInt(index++, region.getMinimumPoint().getBlockX());
+                            statement.setInt(index++, region.getMaximumPoint().getBlockX());
+                            statement.setInt(index++, region.getMinimumPoint().getBlockY());
+                            statement.setInt(index++, region.getMaximumPoint().getBlockY());
+                            statement.setInt(index++, region.getMinimumPoint().getBlockZ());
+                            statement.setInt(index++, region.getMaximumPoint().getBlockZ());
+                        }
+                        statement.setInt(index, query.getLimit());
                         try (final ResultSet resultSet = statement.executeQuery()) {
                             while (resultSet.next()) {
                                 final Location location = new Location(Bukkit.getWorld(resultSet.getString("world")),
@@ -134,7 +150,7 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
                                     LOGGER.warn("Skipping change because of invalid source: {}", source);
                                     continue;
                                 }
-                                final ChangeSubject subject = this.subjectFactory.getSubject(resultSet.getString("type"),
+                                final ChangeSubject<?> subject = this.subjectFactory.getSubject(resultSet.getString("type"),
                                     resultSet.getString("from"), resultSet.getString("to"));
                                 if (subject == null) {
                                     LOGGER.warn("Skipping change because of invalid subject");

@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
 
-public class BlockSubject implements ChangeSubject {
+public class BlockSubject implements ChangeSubject<BlockData> {
 
     private final BlockData from;
     private final BlockData to;
@@ -29,6 +29,18 @@ public class BlockSubject implements ChangeSubject {
     private BlockSubject(@NotNull final BlockData from, @NotNull final BlockData to) {
         this.from = Preconditions.checkNotNull(from, "From may not be null");
         this.to = Preconditions.checkNotNull(to, "To may not be null");
+    }
+
+    /**
+     * Create a new block subject
+     *
+     * @param from The original block data
+     * @param to   New block data
+     * @return Created subject
+     */
+    @NotNull public static BlockSubject of(@NotNull final BlockData from,
+        @NotNull final BlockData to) {
+        return new BlockSubject(from, to);
     }
 
     @Override public String serializeFrom() {
@@ -43,16 +55,12 @@ public class BlockSubject implements ChangeSubject {
         return ChangeType.BLOCK;
     }
 
-    /**
-     * Create a new block subject
-     *
-     * @param from The original block data
-     * @param to   New block data
-     * @return Created subject
-     */
-    @NotNull public static BlockSubject of(@NotNull final BlockData from,
-        @NotNull final BlockData to) {
-        return new BlockSubject(from, to);
+    @Override public BlockData getFrom() {
+        return this.from;
+    }
+
+    @Override public BlockData getTo() {
+        return this.to;
     }
 
 }

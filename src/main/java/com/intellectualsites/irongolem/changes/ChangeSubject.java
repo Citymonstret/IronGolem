@@ -22,7 +22,21 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Something that was changed in a {@link Change}
  */
-public interface ChangeSubject {
+public interface ChangeSubject<T> {
+
+    /**
+     * Get the original state
+     *
+     * @return Original state
+     */
+    T getFrom();
+
+    /**
+     * Get the new state
+     *
+     * @return New state
+     */
+    T getTo();
 
     /**
      * Serialize the subject to a string

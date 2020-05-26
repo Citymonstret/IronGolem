@@ -23,6 +23,8 @@ import com.intellectualsites.irongolem.IronGolem;
 import com.intellectualsites.irongolem.changes.Change;
 import com.intellectualsites.irongolem.changes.ChangeQuery;
 import com.intellectualsites.irongolem.changes.ChangeSubject;
+import com.intellectualsites.irongolem.changes.PlayerSource;
+import com.intellectualsites.irongolem.util.CuboidRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -49,8 +51,8 @@ import java.util.concurrent.TimeUnit;
 public class Inspector {
 
     public static final Material INSPECTOR_MATERIAL = Material.DIAMOND_HOE;
-    private static final Cache<UUID, Inspector> inspectorCache = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
-        .build();
+    private static final Cache<UUID, Inspector> inspectorCache =
+        CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
 
     private final UUID owner;
 
@@ -77,26 +79,43 @@ public class Inspector {
     /**
      * Inspect a location
      *
-     * @param location Location to inspect
+     * @param location   Location to inspect
+     * @param rightClick Whether the trigger was a left or right click
      */
-    public void inspectLocation(@NotNull final Location location) {
-        ChangeQuery.newQuery().atLocation(location).queryChanges().whenComplete(((changes, throwable) -> {
-            final Player player = Bukkit.getPlayer(this.owner);
-            if (player == null) {
-                return;
-            }
-            if (throwable != null) {
-                // TODO FIX
-                throwable.printStackTrace();
-                player.sendMessage("something went wrong");
-            } else {
-                player.sendMessage("changes at that loc");
-                for (final Change change : changes) {
-                    final ChangeSubject subject = change.getSubject();
-                    player.sendMessage(String.format("- %s -> %s at %d", subject.serializeFrom(), subject.serializeTo(), change.getTimestamp()));
+    public void inspectLocation(@NotNull final Location location, final boolean rightClick) {
+        final Player player = Bukkit.getPlayer(this.owner);
+        if (player == null) {
+            return;
+        }
+        if (rightClick) {
+            player.sendMessage("am gonna restore everything surrounding u");
+            ChangeQuery.newQuery().inWorld(player.getWorld()).inRegion(CuboidRegion.surrounding(player.getLocation().toVector(), 10))
+                .distinctValues().queryChanges().whenComplete((changes, throwable) -> {
+               if (throwable != null) {
+                   throwable.printStackTrace();
+                   player.sendMessage("nuhuh");
+               } else {
+                   player.sendMessage("yay, starting restoration");
+                   IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(
+                       PlayerSource.of(player), player.getWorld(), changes, () -> player.sendMessage("am done"));
+               }
+            });
+        } else {
+            ChangeQuery.newQuery().atLocation(location).queryChanges().whenComplete(((changes, throwable) -> {
+                if (throwable != null) {
+                    // TODO FIX
+                    throwable.printStackTrace();
+                    player.sendMessage("something went wrong");
+                } else {
+                    player.sendMessage("changes at that loc");
+                    for (final Change change : changes) {
+                        final ChangeSubject<?> subject = change.getSubject();
+                        player.sendMessage(String
+                            .format("- %s -> %s at %d", subject.serializeFrom(), subject.serializeTo(), change.getTimestamp()));
+                    }
                 }
-            }
-        }));
+            }));
+        }
     }
 
     /**
@@ -105,7 +124,8 @@ public class Inspector {
      * @param itemStack The item stack to get the inspector from
      * @return The inspector, if it could be found
      */
-    @Nullable public static Inspector fromItem(@NotNull final Player player, @NotNull final ItemStack itemStack) {
+    @Nullable public static Inspector fromItem(@NotNull final Player player,
+        @NotNull final ItemStack itemStack) {
         if (!itemStack.hasItemMeta()) {
             return null;
         }
@@ -123,12 +143,14 @@ public class Inspector {
         if (!customItemTagContainer.hasCustomTag(toolKey, ItemTagType.STRING)) {
             return null;
         }
-        final String inspectorOwner = customItemTagContainer.getCustomTag(toolKey, ItemTagType.STRING);
+        final String inspectorOwner =
+            customItemTagContainer.getCustomTag(toolKey, ItemTagType.STRING);
         if (!Objects.equals(inspectorOwner, player.getUniqueId().toString())) {
             return null;
         }
         try {
-            return inspectorCache.get(player.getUniqueId(), () -> new Inspector(player.getUniqueId()));
+            return inspectorCache
+                .get(player.getUniqueId(), () -> new Inspector(player.getUniqueId()));
         } catch (final ExecutionException e) {
             e.printStackTrace();
         }
@@ -143,7 +165,8 @@ public class Inspector {
      */
     @NotNull public static Inspector createInspector(final Player player) {
         try {
-            return inspectorCache.get(player.getUniqueId(), () -> new Inspector(player.getUniqueId()));
+            return inspectorCache
+                .get(player.getUniqueId(), () -> new Inspector(player.getUniqueId()));
         } catch (final ExecutionException e) {
             e.printStackTrace();
         }

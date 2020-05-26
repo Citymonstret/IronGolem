@@ -20,6 +20,7 @@ package com.intellectualsites.irongolem.logging;
 import com.intellectualsites.irongolem.changes.Change;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -36,6 +37,10 @@ public abstract class QueuingChangeLogger implements ChangeLogger {
 
     @Override public void logChange(@NotNull final Change change) {
         this.changeQueue.add(change);
+    }
+
+    @Override public void logChanges(@NotNull final Collection<Change> changes) {
+        this.changeQueue.addAll(changes);
     }
 
     protected Change pollChange() {

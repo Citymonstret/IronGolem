@@ -17,15 +17,7 @@
 
 package com.intellectualsites.irongolem.commands;
 
-import com.intellectualsites.commands.Command;
-import com.intellectualsites.commands.CommandHandlingOutput;
-import com.intellectualsites.commands.CommandResult;
-import com.intellectualsites.commands.bukkit.senders.ConsoleCaller;
-import com.intellectualsites.commands.bukkit.senders.PlayerCaller;
-import com.intellectualsites.commands.callers.CommandCaller;
-import com.intellectualsites.irongolem.IronGolem;
-import me.lucko.commodore.Commodore;
-import me.lucko.commodore.CommodoreProvider;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -33,50 +25,77 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class CommandManager extends Command implements CommandExecutor, TabCompleter {
+public class CommandManager implements CommandExecutor, TabCompleter {
+
+    private static final String[] HELP_ARGS = new String[] {"help"};
+
+    private Collection<SubCommand> subCommands = new LinkedList<>();
+
 
     public CommandManager() {
-        this.getManagerOptions().setPrintStacktrace(false);
-        this.getManagerOptions().setUseAdvancedPermissions(false);
-        this.getManagerOptions().setRequirePrefix(false);
-        this.getManagerOptions().setUsageFormat("");
-        if (CommodoreProvider.isSupported()) {
-            final IronGolem plugin = IronGolem.getPlugin(IronGolem.class);
-            final Commodore commodore = CommodoreProvider.getCommodore(plugin);
-            CommodoreHandler.registerCompletions(commodore,
-                Objects.requireNonNull(plugin.getCommand("irongolem")));
-        }
-        this.createCommand(new InspectorCommand());
+        this.registerSubCommand(new InspectorCommand());
     }
 
-    @Override public CommandResult handle(final CommandCaller caller, final String[] args) {
-        final CommandResult result = super.handle(caller, args);
-        if (result.getCommandResult() != CommandHandlingOutput.SUCCESS) {
-            // TODO: Fix
-            caller.message("something went wrong i guess");
-        }
-        return result;
+    public void registerSubCommand(@NotNull final SubCommand subCommand) {
+        this.subCommands.add(subCommand);
     }
 
     @Override public boolean onCommand(@NotNull final CommandSender sender,
-        @NotNull final  org.bukkit.command.Command command, @NotNull final String label,
-        @NotNull final String[] args) {
-        final CommandCaller<?> commandSender;
-        if (sender instanceof Player) {
-            commandSender = new PlayerCaller((Player) sender);
-        } else {
-            commandSender = ConsoleCaller.instance;
+        @NotNull final org.bukkit.command.Command command, @NotNull final String label,
+        @NotNull String[] args) {
+        if (!(sender instanceof Player)) {
+            // TODO: Deal with this
+            return false;
         }
-        return this.handle(commandSender, args).getCommandResult() == CommandHandlingOutput.SUCCESS;
+        final Player player = (Player) sender;
+
+        // If no args are provided, we force it to run the help command
+        if (args.length == 0) {
+            args = HELP_ARGS;
+        }
+
+        for (final SubCommand subCommand : this.subCommands) {
+            if (subCommand.accepts(args[0])) {
+                final String[] newArgs = new String[args.length - 1];
+                if (newArgs.length > 0) {
+                    System.arraycopy(args, 1, newArgs, 0, newArgs.length);
+                }
+                try {
+                    subCommand.handleCommand(player, newArgs);
+                } catch (final Exception e) {
+                    // TODO: handle this
+                    player.sendMessage(
+                        ChatColor.RED + "Something went wrong when executing the command...");
+                }
+                return true;
+            }
+        }
+
+        player.sendMessage("Unknown command!!");
+
+        return true;
     }
 
     @Override @Nullable public List<String> onTabComplete(@NotNull final CommandSender sender,
-        final @NotNull org.bukkit.command.Command command, @NotNull final String alias,
-        @NotNull String[] args) {
+        @NotNull final org.bukkit.command.Command command, @NotNull final String alias,
+        @NotNull final String[] args) {
+        if (args.length == 1) {
+            return this.subCommands.stream().map(SubCommand::getMainAlias)
+                .collect(Collectors.toList());
+        }
+        for (final SubCommand subCommand : this.subCommands) {
+            if (subCommand.accepts(args[0])) {
+                final String[] newArgs = new String[args.length - 1];
+                System.arraycopy(args, 1, newArgs, 0, newArgs.length);
+                return subCommand.getSuggestions(sender, newArgs);
+            }
+        }
         return Collections.emptyList();
     }
 

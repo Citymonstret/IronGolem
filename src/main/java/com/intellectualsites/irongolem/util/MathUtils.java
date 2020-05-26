@@ -15,23 +15,16 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //
 
-package com.intellectualsites.irongolem.commands;
+package com.intellectualsites.irongolem.util;
 
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import me.lucko.commodore.Commodore;
-import org.bukkit.command.PluginCommand;
-import org.jetbrains.annotations.NotNull;
+public class MathUtils {
 
-public class CommodoreHandler {
-
-    private CommodoreHandler() {
+    public static long pairInt(int x, int y) {
+        return (((long) x) << 32) | (y & 0xffffffffL);
     }
 
-    public static void registerCompletions(@NotNull final Commodore commodore, @NotNull final
-        PluginCommand command) {
-        commodore.register(command, LiteralArgumentBuilder.literal("irongolem")
-            .then(LiteralArgumentBuilder.literal("inspector"))
-        );
+    public static int pair(short x, short y) {
+        return (x << 16) | (y & 0xFFFF);
     }
 
 }

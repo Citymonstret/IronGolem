@@ -19,5 +19,6 @@ package com.intellectualsites.irongolem.changes;
 
 public enum ChangeReason {
     BLOCK_BREAK,
-    BLOCK_PLACE
+    BLOCK_PLACE,
+    RESTORATION
 }

@@ -91,4 +91,10 @@ public class CuboidRegion {
         return new CuboidRegion(minimumPoint, maximumPoint);
     }
 
+    public static CuboidRegion surrounding(@NotNull final Vector center, final int radius) {
+        final Vector minimum = center.clone().subtract(new Vector(radius, radius, radius));
+        final Vector maximum = center.clone().add(new Vector(radius, radius, radius));
+        return of(minimum, maximum);
+    }
+
 }

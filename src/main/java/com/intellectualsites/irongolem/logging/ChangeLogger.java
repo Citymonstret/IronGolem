@@ -21,6 +21,7 @@ import com.intellectualsites.irongolem.changes.Change;
 import com.intellectualsites.irongolem.changes.ChangeQuery;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -43,6 +44,13 @@ public interface ChangeLogger {
      * @param change Change to log
      */
     void logChange(@NotNull final Change change);
+
+    /**
+     * Log multiple {@link Change changes} at once
+     *
+     * @param changes changes to log
+     */
+    void logChanges(@NotNull final Collection<Change> changes);
 
     /**
      * Stop the block logger

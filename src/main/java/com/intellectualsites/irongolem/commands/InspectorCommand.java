@@ -17,25 +17,39 @@
 
 package com.intellectualsites.irongolem.commands;
 
-import com.intellectualsites.commands.CommandDeclaration;
-import com.intellectualsites.commands.CommandInstance;
-import com.intellectualsites.commands.bukkit.plugin.PluginCommandBody;
-import com.intellectualsites.commands.bukkit.senders.PlayerCaller;
 import com.intellectualsites.irongolem.inspector.Inspector;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
-@CommandDeclaration(
-    command = "inspector",
-    usage = "/ig inspector",
-    description = "Receive the inspector tool"
-)
-public class InspectorCommand extends PluginCommandBody {
+import java.util.List;
+import java.util.Map;
 
-    @Override public boolean onCommand(final CommandInstance instance) {
-        final PlayerCaller playerCaller = (PlayerCaller) instance.getCaller();
-        playerCaller.message("here u get tool");
-        playerCaller.getPlayer().getInventory()
-            .addItem(Inspector.createInspector(playerCaller.getPlayer()).buildItemStack());
-        return true;
+public class InspectorCommand extends SubCommand {
+
+    private static final String[] ALIASES = new String[] {"inspector", "i"};
+
+    private final CommandFlags commandFlags = new CommandFlags();
+
+    public InspectorCommand() {
+        super(ALIASES);
+        this.commandFlags.registerFlag(CommandFlags.IntegerFlag.of("range", "r"));
+        this.commandFlags.registerFlag(CommandFlags.IntegerFlag.of("limit", "l"));
+    }
+
+    @Override public void handleCommand(@NotNull final Player player, @NotNull final String[] args) {
+        final Map<String, Object> parsedFlags = this.commandFlags.parseFlags(player, args);
+        final int range = (int) parsedFlags.getOrDefault("range", 10);
+        final int limit = (int) parsedFlags.getOrDefault("limit", 100);
+        player.sendMessage("here u go");
+        player.sendMessage("- range: " + range);
+        player.sendMessage("- limit: " + limit);
+        player.getInventory().addItem(Inspector.createInspector(player).buildItemStack());
+    }
+
+    @Override public List<String> getSuggestions(@NotNull final CommandSender sender,
+        @NotNull final String[] args) {
+        return this.commandFlags.completeFlags(sender, args);
     }
 
 }

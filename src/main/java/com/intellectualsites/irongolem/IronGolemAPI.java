@@ -18,6 +18,7 @@
 package com.intellectualsites.irongolem;
 
 import com.intellectualsites.irongolem.logging.ChangeLogger;
+import com.intellectualsites.irongolem.restoration.RestorationHandler;
 import org.jetbrains.annotations.NotNull;
 
 public interface IronGolemAPI {
@@ -29,5 +30,13 @@ public interface IronGolemAPI {
      * @return Change logger
      */
     @NotNull ChangeLogger getChangeLogger();
+
+    /**
+     * Get the restoration handler implementation used
+     * on the server
+     *
+     * @return Restoration handler
+     */
+    @NotNull RestorationHandler getRestorationHandler();
 
 }

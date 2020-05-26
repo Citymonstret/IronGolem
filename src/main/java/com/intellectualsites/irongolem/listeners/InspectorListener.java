@@ -37,7 +37,7 @@ public class InspectorListener implements Listener {
             event.setUseInteractedBlock(Event.Result.DENY);
             event.setUseItemInHand(Event.Result.DENY);
             if (event.getClickedBlock() != null) {
-                inspector.inspectLocation(event.getClickedBlock().getLocation());
+                inspector.inspectLocation(event.getClickedBlock().getLocation(), event.getAction().name().startsWith("RIGHT"));
             }
         }
     }

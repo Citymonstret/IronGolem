@@ -36,6 +36,7 @@ public class ChangeQuery {
     private CuboidRegion region;
     private World world;
     private int limit = Short.MAX_VALUE;
+    private boolean distinct = false;
 
     private ChangeQuery() {
     }
@@ -85,6 +86,16 @@ public class ChangeQuery {
     }
 
     /**
+     * Only query for the oldest available value at any given location
+     *
+     * @return The query instance
+     */
+    public ChangeQuery distinctValues() {
+       this.distinct = true;
+       return this;
+    }
+
+    /**
      * Limit the amount of {@link Change changes} that are queried for
      *
      * @param limit Change limit
@@ -124,6 +135,16 @@ public class ChangeQuery {
      */
     public int getLimit() {
         return this.limit;
+    }
+
+    /**
+     * Whether or not distinct values should
+     * be queried for
+     *
+     * @return Whether or not the query is for distinct values
+     */
+    public boolean shouldUseDistinct() {
+        return this.distinct;
     }
 
     /**
