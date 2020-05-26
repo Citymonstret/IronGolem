@@ -21,10 +21,15 @@ import com.google.common.base.Preconditions;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
 
-public class BlockSubject implements ChangeSubject<BlockData> {
+/**
+ * A {@link ChangeSubject} involving block data
+ */
+public class BlockSubject implements ChangeSubject<BlockData, String> {
 
     private final BlockData from;
     private final BlockData to;
+    private final String oldState = "";
+    private final String newState = "";
 
     private BlockSubject(@NotNull final BlockData from, @NotNull final BlockData to) {
         this.from = Preconditions.checkNotNull(from, "From may not be null");
@@ -61,6 +66,22 @@ public class BlockSubject implements ChangeSubject<BlockData> {
 
     @Override public BlockData getTo() {
         return this.to;
+    }
+
+    @Override public String getOldState() {
+        return this.oldState;
+    }
+
+    @Override public String getNewState() {
+        return this.newState;
+    }
+
+    @Override public String serializeNewState() {
+        return this.newState;
+    }
+
+    @Override public String serializeOldState() {
+        return this.oldState;
     }
 
 }

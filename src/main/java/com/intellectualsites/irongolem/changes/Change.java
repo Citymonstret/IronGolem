@@ -28,12 +28,12 @@ public class Change {
 
     private final ChangeSource source;
     private final Location location;
-    private final ChangeSubject subject;
+    private final ChangeSubject<?, ?> subject;
     private final ChangeReason reason;
     private final long timestamp;
 
     private Change(@NotNull final ChangeSource source, @NotNull final Location location,
-        @NotNull final ChangeSubject subject, @NotNull final ChangeReason reason, final long timestamp) {
+        @NotNull final ChangeSubject<?, ?> subject, @NotNull final ChangeReason reason, final long timestamp) {
         this.source = source;
         this.location = location;
         this.subject = subject;
@@ -68,7 +68,7 @@ public class Change {
      *
      * @return Change subject
      */
-    @NotNull public ChangeSubject getSubject() {
+    @NotNull public ChangeSubject<?, ?> getSubject() {
         return this.subject;
     }
 
@@ -94,7 +94,7 @@ public class Change {
 
         private ChangeSource source;
         private Location location;
-        private ChangeSubject subject;
+        private ChangeSubject<?, ?> subject;
         private ChangeReason reason;
         private long time = System.currentTimeMillis();
 
@@ -108,7 +108,7 @@ public class Change {
             return this;
         }
 
-        @NotNull public ChangeBuilder withSubject(@NotNull final ChangeSubject subject) {
+        @NotNull public ChangeBuilder withSubject(@NotNull final ChangeSubject<?, ?> subject) {
             this.subject = Preconditions.checkNotNull(subject, "Subject may not be null");
             return this;
         }

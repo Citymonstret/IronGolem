@@ -22,21 +22,35 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Something that was changed in a {@link Change}
  */
-public interface ChangeSubject<T> {
+public interface ChangeSubject<D, S> {
 
     /**
      * Get the original state
      *
      * @return Original state
      */
-    T getFrom();
+    D getFrom();
 
     /**
      * Get the new state
      *
      * @return New state
      */
-    T getTo();
+    D getTo();
+
+    /**
+     * Get the old subject state
+     *
+     * @return Subject state
+     */
+    S getOldState();
+
+    /**
+     * Get the new subject state
+     *
+     * @return Subject state
+     */
+    S getNewState();
 
     /**
      * Serialize the subject to a string
@@ -51,6 +65,20 @@ public interface ChangeSubject<T> {
      * @return Serialized string
      */
     String serializeTo();
+
+    /**
+     * Serialize the old subject state
+     *
+     * @return Serialized string
+     */
+    String serializeOldState();
+
+    /**
+     * Serialize the new subject state
+     *
+     * @return Serialized string
+     */
+    String serializeNewState();
 
     /**
      * Get the change type

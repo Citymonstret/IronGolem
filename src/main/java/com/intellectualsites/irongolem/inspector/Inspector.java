@@ -109,7 +109,7 @@ public class Inspector {
                 } else {
                     player.sendMessage("changes at that loc");
                     for (final Change change : changes) {
-                        final ChangeSubject<?> subject = change.getSubject();
+                        final ChangeSubject<?, ?> subject = change.getSubject();
                         player.sendMessage(String
                             .format("- %s -> %s at %d", subject.serializeFrom(), subject.serializeTo(), change.getTimestamp()));
                     }

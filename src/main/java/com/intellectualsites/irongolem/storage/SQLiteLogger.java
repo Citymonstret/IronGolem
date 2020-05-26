@@ -52,12 +52,12 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
     private static final Logger LOGGER = LoggerFactory.getLogger(SQLiteLogger.class);
 
     private static final String DDL =
-        "create table if not exists `events`" + "(" + "\tevent_id INTEGER"
-            + "\t\tconstraint events_pk" + "\t\t\tprimary key autoincrement,"
-            + "\tworld VARCHAR(36) not null," + "\tx INTEGER not null," + "\ty INTEGER not null,"
-            + "\tz INTEGER not null," + "\ttimestamp INTEGER not null,"
-            + "\tsource VARCHAR(36) not null," + "\ttype varchar(16)," + "\t\"from\" TEXT,"
-            + "\t\"to\" TEXT, reason varchar(64))";
+        "create table if not exists `events`" + "(" + "event_id INTEGER"
+            + "constraint events_pk" + "primary key autoincrement,"
+            + "world VARCHAR(36) not null," + "x INTEGER not null," + "y INTEGER not null,"
+            + "z INTEGER not null," + "timestamp INTEGER not null,"
+            + "source VARCHAR(36) not null," + "type varchar(16), `from` TEXT,"
+            + "`to` TEXT, `old_state` TEXT, `new_state` TEXT, reason varchar(64))";
 
     private final Object statementLock = new Object();
     private final SourceFactory sourceFactory = new SourceFactory();
@@ -71,10 +71,10 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
     public SQLiteLogger(@NotNull final Plugin plugin, final int interval) throws Exception {
         super(plugin, interval, 128);
         Class.forName("org.sqlite.JDBC");
-        this.file = new File(plugin.getDataFolder(), "storage.db");
+        this.file = new File(plugin.getDataFolder(), "database.db");
         if (!file.exists()) {
             if (!file.createNewFile()) {
-                throw new RuntimeException("Could not create storage.db");
+                throw new RuntimeException("Could not create database.db");
             }
         }
         this.plugin = plugin;
@@ -83,8 +83,8 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
     @Override protected void startBatch() throws Exception {
         synchronized (this.statementLock) {
             this.statement = this.getConnection().prepareStatement(
-                "INSERT INTO `events`(`world`, `x`, `y`, `z`, `timestamp`, `source`, `type`, `from`, `to`, `reason`)"
-                    + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                "INSERT INTO `events`(`world`, `x`, `y`, `z`, `timestamp`, `source`, `type`, `from`, `to`, `old_state`, `new_state`, `reason`)"
+                    + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         }
     }
 
@@ -101,6 +101,8 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
             this.statement.setString(7, subject.getType().name());
             this.statement.setString(8, subject.serializeFrom());
             this.statement.setString(9, subject.serializeTo());
+            this.statement.setString(10, subject.serializeOldState());
+            this.statement.setString(11, subject.serializeNewState());
             this.statement.setString(10, change.getReason().name());
             // Set params
             this.statement.addBatch();
@@ -150,8 +152,9 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
                                     LOGGER.warn("Skipping change because of invalid source: {}", source);
                                     continue;
                                 }
-                                final ChangeSubject<?> subject = this.subjectFactory.getSubject(resultSet.getString("type"),
-                                    resultSet.getString("from"), resultSet.getString("to"));
+                                final ChangeSubject<?, ?> subject = this.subjectFactory.getSubject(resultSet.getString("type"),
+                                    resultSet.getString("from"), resultSet.getString("to"),
+                                    resultSet.getString("old_state"), resultSet.getString("new_state"));
                                 if (subject == null) {
                                     LOGGER.warn("Skipping change because of invalid subject");
                                     continue;

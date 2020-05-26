@@ -39,7 +39,7 @@ public class SubjectFactory {
      * @return The subject, or null if it couldn't be created
      */
     @Nullable public ChangeSubject getSubject(@NotNull final String type,
-        @NotNull final String from, @NotNull final String to) {
+        @NotNull final String from, @NotNull final String to, @NotNull final String oldState, @NotNull final String newState) {
         final ChangeType changeType = ChangeType.valueOf(type);
         if (changeType == ChangeType.BLOCK) {
             return BlockSubject.of(Bukkit.createBlockData(from), Bukkit.createBlockData(to));

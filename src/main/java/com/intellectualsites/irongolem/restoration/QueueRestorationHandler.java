@@ -108,7 +108,7 @@ public class QueueRestorationHandler implements RestorationHandler {
         final RunnableVal<List<Change>> changesTask = new RunnableVal<List<Change>>(new LinkedList<>()) {
             @Override public void run(final List<Change> value) {
                 for (final Change change : changes) {
-                    final ChangeSubject<?> subject = change.getSubject();
+                    final ChangeSubject<?, ?> subject = change.getSubject();
                     if (subject.getType() != ChangeType.BLOCK) {
                         continue; // TODO: Fix this
                     }
@@ -126,7 +126,7 @@ public class QueueRestorationHandler implements RestorationHandler {
         this.ironGolem.getChangeLogger().logChanges(TaskManager.IMP.sync(changesTask));
         final LocalBlockQueue localBlockQueue = GlobalBlockQueue.IMP.getNewQueue(world.getName(), false);
         for (final Change change : changes) {
-            final ChangeSubject<?> subject = change.getSubject();
+            final ChangeSubject<?, ?> subject = change.getSubject();
             if (subject.getType() != ChangeType.BLOCK) {
                 continue; // TODO: Fix this
             }
