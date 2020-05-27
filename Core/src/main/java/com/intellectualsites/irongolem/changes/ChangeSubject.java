@@ -18,6 +18,7 @@
 package com.intellectualsites.irongolem.changes;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Something that was changed in a {@link Change}
@@ -43,14 +44,14 @@ public interface ChangeSubject<D, S> {
      *
      * @return Subject state
      */
-    S getOldState();
+    @Nullable S getOldState();
 
     /**
      * Get the new subject state
      *
      * @return Subject state
      */
-    S getNewState();
+    @Nullable S getNewState();
 
     /**
      * Serialize the subject to a string

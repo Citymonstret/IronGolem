@@ -82,7 +82,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
         if (Bukkit.getPluginManager().getPlugin("FastAsyncWorldEdit") != null) {
             try {
                 LOGGER.info("Using the FAWE restoration handler");
-                this.restorationHandler = new FAWERestorationHandler();
+                this.restorationHandler = new FAWERestorationHandler(this);
             } catch (final Exception e) {
                 LOGGER.error("Failed to initialize the FAWE restoration handler", e);
             }
