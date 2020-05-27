@@ -24,6 +24,8 @@ import com.intellectualsites.irongolem.changes.Change;
 import com.intellectualsites.irongolem.changes.ChangeQuery;
 import com.intellectualsites.irongolem.changes.ChangeSubject;
 import com.intellectualsites.irongolem.changes.PlayerSource;
+import com.intellectualsites.irongolem.events.PlayerLookupChangesEvent;
+import com.intellectualsites.irongolem.players.IGPlayer;
 import com.intellectualsites.irongolem.util.CuboidRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -100,7 +102,13 @@ public class Inspector {
                }
             });
         } else {
-            ChangeQuery.newQuery().atLocation(location).queryChanges().whenComplete(((changes, throwable) -> {
+            final ChangeQuery changeQuery = ChangeQuery.newQuery().atLocation(location);
+            final PlayerLookupChangesEvent playerLookupChangesEvent = new PlayerLookupChangesEvent(changeQuery, player);
+            Bukkit.getPluginManager().callEvent(playerLookupChangesEvent);
+            if (playerLookupChangesEvent.isCancelled()) {
+                return;
+            }
+            changeQuery.queryChanges().whenComplete(((changes, throwable) -> {
                 if (throwable != null) {
                     // TODO FIX
                     throwable.printStackTrace();
@@ -162,14 +170,14 @@ public class Inspector {
      * @param player Player
      * @return Created inspector
      */
-    @NotNull public static Inspector createInspector(final Player player) {
+    @NotNull public static Inspector createInspector(final IGPlayer player) {
         try {
             return inspectorCache
-                .get(player.getUniqueId(), () -> new Inspector(player.getUniqueId()));
+                .get(player.getUUID(), () -> new Inspector(player.getUUID()));
         } catch (final ExecutionException e) {
             e.printStackTrace();
         }
-        return new Inspector(player.getUniqueId());
+        return new Inspector(player.getUUID());
     }
 
 }

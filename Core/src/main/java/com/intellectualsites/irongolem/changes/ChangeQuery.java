@@ -138,6 +138,16 @@ public class ChangeQuery {
     }
 
     /**
+     * Allow duplicate values in the query
+     *
+     * @return The query instance
+     */
+    @NotNull public ChangeQuery nonDistinctValues() {
+        this.distinct = false;
+        return this;
+    }
+
+    /**
      * Limit the amount of {@link Change changes} that are queried for
      *
      * @param limit Change limit
@@ -150,6 +160,15 @@ public class ChangeQuery {
         Preconditions.checkState(limit > 0, "Limit has to be positive");
         this.limit = limit;
         return this;
+    }
+
+    /**
+     * Allow an unlimited amount of results
+     *
+     * @return The query instance
+     */
+    @NotNull public ChangeQuery withoutLimit() {
+        return this.withLimit(Integer.MAX_VALUE);
     }
 
     /**

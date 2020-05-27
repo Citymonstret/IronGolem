@@ -18,8 +18,8 @@
 package com.intellectualsites.irongolem.commands;
 
 import com.intellectualsites.irongolem.IronGolem;
+import com.intellectualsites.irongolem.players.IGPlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -52,7 +52,7 @@ public abstract class SubCommand {
         return Collections.emptyList();
     }
 
-    public abstract void handleCommand(@NotNull final Player player, @NotNull final String[] args);
+    public abstract void handleCommand(@NotNull final IGPlayer player, @NotNull final String[] args);
 
     /**
      * Get the {@link IronGolem} instance that was used

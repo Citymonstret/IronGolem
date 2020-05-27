@@ -22,9 +22,12 @@ import com.intellectualsites.irongolem.changes.Change;
 import com.intellectualsites.irongolem.changes.ChangeQuery;
 import com.intellectualsites.irongolem.changes.ChangeReason;
 import com.intellectualsites.irongolem.changes.ChangeSubject;
+import com.intellectualsites.irongolem.configuration.TranslatableMessage;
+import com.intellectualsites.irongolem.events.PlayerLookupChangesEvent;
+import com.intellectualsites.irongolem.players.IGPlayer;
 import com.intellectualsites.irongolem.util.CuboidRegion;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -45,12 +48,12 @@ public class LookupCommand extends SubCommand {
         commandFlags.registerFlag(CommandFlags.BooleanFlag.of("distinct"));
     }
 
-    @Override public void handleCommand(@NotNull final Player player, @NotNull final String[] args) {
-        final Map<String, Object> flags = this.commandFlags.parseFlags(player, args);
+    @Override public void handleCommand(@NotNull final IGPlayer player, @NotNull final String[] args) {
+        final Map<String, Object> flags = this.commandFlags.parseFlags(player.getPlayer(), args);
         final Collection<ChangeReason> reasons =
             (Collection<ChangeReason>) flags.getOrDefault("reasons", EnumSet.allOf(ChangeReason.class));
         if (!flags.containsKey("range")) {
-            player.sendMessage("u need range");
+            player.sendMessage(TranslatableMessage.of("command.missing.range"));
             return;
         }
         final boolean distinct = (boolean) flags.getOrDefault("distinct", false);
@@ -58,22 +61,28 @@ public class LookupCommand extends SubCommand {
 
         final ChangeQuery query = ChangeQuery.newQuery()
             .inWorld(player.getWorld())
-            .inRegion(CuboidRegion.surrounding(player.getLocation().toVector(), range))
+            .inRegion(CuboidRegion.surrounding(player.getLocation(), range))
             .withReasons(reasons);
         if (distinct) {
             query.distinctValues();
+        }
+        final PlayerLookupChangesEvent
+            playerLookupChangesEvent = new PlayerLookupChangesEvent(query, player.getPlayer());
+        Bukkit.getPluginManager().callEvent(playerLookupChangesEvent);
+        if (playerLookupChangesEvent.isCancelled()) {
+            return;
         }
         query.queryChanges()
             .whenComplete(((changes, throwable) -> {
             if (throwable != null) {
                 // TODO FIX
                 throwable.printStackTrace();
-                player.sendMessage("something went wrong");
+                player.sendMessage(TranslatableMessage.of("query.failure"), "message", throwable.getMessage());
             } else {
-                player.sendMessage("changes at that loc");
+                player.getPlayer().sendMessage("changes at that loc");
                 for (final Change change : changes.getChanges()) {
                     final ChangeSubject<?, ?> subject = change.getSubject();
-                    player.sendMessage(String
+                    player.getPlayer().sendMessage(String
                         .format("- %s -> %s at %d", subject.serializeFrom(), subject.serializeTo(), change.getTimestamp()));
                 }
             }

@@ -19,8 +19,8 @@ package com.intellectualsites.irongolem.commands;
 
 import com.intellectualsites.irongolem.IronGolem;
 import com.intellectualsites.irongolem.inspector.Inspector;
+import com.intellectualsites.irongolem.players.IGPlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -38,14 +38,14 @@ public class InspectorCommand extends SubCommand {
         this.commandFlags.registerFlag(CommandFlags.IntegerFlag.of("limit", "l"));
     }
 
-    @Override public void handleCommand(@NotNull final Player player, @NotNull final String[] args) {
-        final Map<String, Object> parsedFlags = this.commandFlags.parseFlags(player, args);
+    @Override public void handleCommand(@NotNull final IGPlayer player, @NotNull final String[] args) {
+        final Map<String, Object> parsedFlags = this.commandFlags.parseFlags(player.getPlayer(), args);
         final int range = (int) parsedFlags.getOrDefault("range", 10);
         final int limit = (int) parsedFlags.getOrDefault("limit", 100);
-        player.sendMessage("here u go");
-        player.sendMessage("- range: " + range);
-        player.sendMessage("- limit: " + limit);
-        player.getInventory().addItem(Inspector.createInspector(player).buildItemStack());
+        player.getPlayer().sendMessage("here u go");
+        player.getPlayer().sendMessage("- range: " + range);
+        player.getPlayer().sendMessage("- limit: " + limit);
+        player.getPlayer().getInventory().addItem(Inspector.createInspector(player).buildItemStack());
     }
 
     @Override public List<String> getSuggestions(@NotNull final CommandSender sender,

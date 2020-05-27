@@ -17,17 +17,17 @@
 
 package com.intellectualsites.irongolem.commands;
 
-import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
+import com.intellectualsites.irongolem.configuration.TranslatableMessage;
+import com.intellectualsites.irongolem.players.IGPlayer;
 import org.jetbrains.annotations.NotNull;
 
 final class CommandExecutionInstance implements Runnable {
 
-    private final Player executor;
+    private final IGPlayer executor;
     private final String[] args;
     private final SubCommand subCommand;
 
-    CommandExecutionInstance(@NotNull final Player executor, @NotNull final String[] args,
+    CommandExecutionInstance(@NotNull final IGPlayer executor, @NotNull final String[] args,
         @NotNull final SubCommand subCommand) {
         this.executor = executor;
         this.args = args;
@@ -39,8 +39,7 @@ final class CommandExecutionInstance implements Runnable {
             subCommand.handleCommand(this.executor, this.args);
         } catch (final Exception e) {
             // TODO: handle this
-            this.executor.sendMessage(
-                ChatColor.RED + "Something went wrong when executing the command: " + e.getMessage());
+            this.executor.sendMessage(TranslatableMessage.of("command.error"), "message", e.getMessage());
         }
     }
 

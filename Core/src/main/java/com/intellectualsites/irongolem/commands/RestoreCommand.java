@@ -21,9 +21,10 @@ import com.intellectualsites.irongolem.IronGolem;
 import com.intellectualsites.irongolem.changes.ChangeQuery;
 import com.intellectualsites.irongolem.changes.ChangeReason;
 import com.intellectualsites.irongolem.changes.PlayerSource;
+import com.intellectualsites.irongolem.configuration.TranslatableMessage;
+import com.intellectualsites.irongolem.players.IGPlayer;
 import com.intellectualsites.irongolem.util.CuboidRegion;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -43,30 +44,30 @@ public class RestoreCommand extends SubCommand {
         commandFlags.registerFlag(CommandFlags.EnumFlag.of(ChangeReason.class, "reasons"));
     }
 
-    @Override public void handleCommand(@NotNull final Player player, @NotNull final String[] args) {
-        final Map<String, Object> flags = this.commandFlags.parseFlags(player, args);
+    @Override public void handleCommand(@NotNull final IGPlayer player, @NotNull final String[] args) {
+        final Map<String, Object> flags = this.commandFlags.parseFlags(player.getPlayer(), args);
         final Collection<ChangeReason> reasons =
             (Collection<ChangeReason>) flags.getOrDefault("reasons", EnumSet.allOf(ChangeReason.class));
         if (!flags.containsKey("range")) {
-            player.sendMessage("u need range");
+            player.sendMessage(TranslatableMessage.of("command.missing.range"));
             return;
         }
         final int range = (int) flags.get("range");
 
         ChangeQuery.newQuery()
             .inWorld(player.getWorld())
-            .inRegion(CuboidRegion.surrounding(player.getLocation().toVector(), range))
+            .inRegion(CuboidRegion.surrounding(player.getLocation(), range))
             .withReasons(reasons)
             .distinctValues()
             .queryChanges()
             .whenComplete(((changes, throwable) -> {
                 if (throwable != null) {
                     throwable.printStackTrace();
-                    player.sendMessage("nuhuh");
+                    player.sendMessage(TranslatableMessage.of("query.failure"), "message", throwable.getMessage());
                 } else {
-                    player.sendMessage("yay, starting restoration");
+                    player.getPlayer().sendMessage("yay, starting restoration");
                     IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes, PlayerSource
-                        .of(player), () -> player.sendMessage("am done"));
+                        .of(player), () -> player.getPlayer().sendMessage("am done"));
                 }
             }));
     }

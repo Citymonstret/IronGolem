@@ -18,6 +18,7 @@
 package com.intellectualsites.irongolem;
 
 import com.intellectualsites.irongolem.logging.ChangeLogger;
+import com.intellectualsites.irongolem.players.PlayerManager;
 import com.intellectualsites.irongolem.restoration.RestorationHandler;
 import com.intellectualsites.irongolem.util.UsernameMapper;
 import org.jetbrains.annotations.NotNull;
@@ -46,5 +47,12 @@ public interface IronGolemAPI {
      * @return Username mapper
      */
     @NotNull UsernameMapper getUsernameMapper();
+
+    /**
+     * Get the player manager
+     *
+     * @return Player manager
+     */
+    @NotNull PlayerManager getPlayerManager();
 
 }

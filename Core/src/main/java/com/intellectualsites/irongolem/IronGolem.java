@@ -20,7 +20,9 @@ package com.intellectualsites.irongolem;
 import com.intellectualsites.irongolem.commands.CommandManager;
 import com.intellectualsites.irongolem.listeners.BlockListener;
 import com.intellectualsites.irongolem.listeners.InspectorListener;
+import com.intellectualsites.irongolem.listeners.PlayerListener;
 import com.intellectualsites.irongolem.logging.ChangeLogger;
+import com.intellectualsites.irongolem.players.PlayerManager;
 import com.intellectualsites.irongolem.queue.LocalBlockQueue;
 import com.intellectualsites.irongolem.restoration.FAWERestorationHandler;
 import com.intellectualsites.irongolem.restoration.QueueRestorationHandler;
@@ -41,6 +43,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IronGolem.class);
 
+    private PlayerManager playerManager;
     private ChangeLogger changeLogger;
     private RestorationHandler restorationHandler;
     private BlockWrapperFactory blockWrapperFactory;
@@ -103,6 +106,13 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+        try {
+            this.playerManager = new PlayerManager(this);
+        } catch (final Exception e) {
+            LOGGER.error("Failed to setup player manager", e);
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
         if (this.changeLogger == null || !this.changeLogger.startLogging()) {
             LOGGER.error("Failed to start change logger");
             Bukkit.getPluginManager().disablePlugin(this);
@@ -110,6 +120,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
         } else {
             Bukkit.getPluginManager().registerEvents(new BlockListener(this.changeLogger), this);
             Bukkit.getPluginManager().registerEvents(new InspectorListener(), this);
+            Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
             Objects.requireNonNull(getCommand("irongolem")).setExecutor(new CommandManager(this));
         }
         Bukkit.getServicesManager()
@@ -130,6 +141,10 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
 
     @NotNull @Override public UsernameMapper getUsernameMapper() {
         return this.usernameMapper;
+    }
+
+    @NotNull @Override public PlayerManager getPlayerManager() {
+        return this.playerManager;
     }
 
 }

@@ -18,6 +18,8 @@
 package com.intellectualsites.irongolem.commands;
 
 import com.intellectualsites.irongolem.IronGolem;
+import com.intellectualsites.irongolem.configuration.TranslatableMessage;
+import com.intellectualsites.irongolem.players.IGPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -46,8 +48,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     public CommandManager(@NotNull final IronGolem ironGolem) {
         this.ironGolem = ironGolem;
         this.registerSubCommand(new InspectorCommand(ironGolem));
-        this.registerSubCommand(new LookupCommand());
-        this.registerSubCommand(new RestoreCommand());
+        this.registerSubCommand(new LookupCommand(ironGolem));
+        this.registerSubCommand(new RestoreCommand(ironGolem));
     }
 
     public void registerSubCommand(@NotNull final SubCommand subCommand) {
@@ -61,7 +63,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             // TODO: Deal with this
             return false;
         }
-        final Player player = (Player) sender;
+
+        final IGPlayer player = this.ironGolem.getPlayerManager().getPlayer((Player) sender);
 
         // If no args are provided, we force it to run the help command
         if (args.length == 0) {
@@ -70,6 +73,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
         for (final SubCommand subCommand : this.subCommands) {
             if (subCommand.accepts(args[0])) {
+                if (!player.hasPermission(subCommand.getMainAlias())) {
+                    player.sendMessage(TranslatableMessage.of("command.not-permitted"));
+                    return true;
+                }
                 final String[] newArgs = new String[args.length - 1];
                 if (newArgs.length > 0) {
                     System.arraycopy(args, 1, newArgs, 0, newArgs.length);
@@ -79,8 +86,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 return true;
             }
         }
-        player.sendMessage("Unknown command!!");
 
+        player.sendMessage(TranslatableMessage.of("command.not-found"));
         return true;
     }
 

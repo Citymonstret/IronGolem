@@ -18,6 +18,7 @@
 package com.intellectualsites.irongolem.changes;
 
 import com.google.common.base.Preconditions;
+import com.intellectualsites.irongolem.players.IGPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,6 +47,16 @@ public class PlayerSource extends ChangeSource {
      */
     @NotNull public static PlayerSource of(@NotNull final Player player) {
         return new PlayerSource(Preconditions.checkNotNull(player, "Player not be null"));
+    }
+
+    /**
+     * Create a new player source
+     *
+     * @param player Player
+     * @return Created source
+     */
+    @NotNull public static PlayerSource of(@NotNull final IGPlayer player) {
+        return new PlayerSource(Preconditions.checkNotNull(player.getPlayer(), "Player not be null"));
     }
 
     /**
