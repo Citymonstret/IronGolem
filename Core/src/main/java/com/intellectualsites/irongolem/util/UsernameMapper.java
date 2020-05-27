@@ -134,7 +134,7 @@ public class UsernameMapper {
      * @param username Username
      * @return UUID, or null
      */
-    @Nullable public UUID getUsername(@NotNull final String username) {
+    @Nullable public UUID getUUID(@NotNull final String username) {
         ThreadUtils.catchSync("UUIDs can only be retrieved asynchronously");
         Preconditions.checkNotNull(username, "Username may not be null");
         try {
