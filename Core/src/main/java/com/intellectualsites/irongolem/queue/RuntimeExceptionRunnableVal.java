@@ -39,12 +39,12 @@ public class RuntimeExceptionRunnableVal<T> extends RunnableVal<RuntimeException
         this.running = running;
     }
 
-    @Override public void run(RuntimeException value) {
+    @Override public void run(@NotNull final RuntimeException value) {
         try {
             function.run();
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             this.value = e;
-        } catch (Throwable neverHappens) {
+        } catch (final Throwable neverHappens) {
             neverHappens.printStackTrace();
         } finally {
             running.set(false);

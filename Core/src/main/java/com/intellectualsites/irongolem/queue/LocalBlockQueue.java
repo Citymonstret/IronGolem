@@ -26,6 +26,7 @@
 package com.intellectualsites.irongolem.queue;
 
 import com.intellectualsites.irongolem.util.BlockWrapper;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class LocalBlockQueue {
 
@@ -35,7 +36,7 @@ public abstract class LocalBlockQueue {
 
     public abstract long getModified();
 
-    public abstract void setModified(long modified);
+    public abstract void setModified(final long modified);
 
     /**
      * Sets the block at the coordinates provided to the given id.
@@ -45,14 +46,13 @@ public abstract class LocalBlockQueue {
      * @param z    the z coordinate from 0 to 15 inclusive
      * @param data the data to set the block to
      */
-    public abstract boolean setBlock(final int x, final int y, final int z, final BlockWrapper data);
-
-    public abstract BlockWrapper getBlock(int x, int y, int z);
+    public abstract void setBlock(final int x, final int y, final int z,
+        @NotNull final BlockWrapper data);
 
     public abstract String getWorld();
 
-    public boolean enqueue() {
-        return GlobalBlockQueue.IMP.enqueue(this);
+    public void enqueue() {
+        GlobalBlockQueue.IMP.enqueue(this);
     }
 
 }

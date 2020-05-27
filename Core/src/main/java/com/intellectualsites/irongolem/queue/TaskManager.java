@@ -26,86 +26,29 @@
 package com.intellectualsites.irongolem.queue;
 
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class TaskManager {
 
-    public static final HashMap<Integer, Integer> tasks = new HashMap<>();
     public static TaskManager IMP;
 
-    public static int runTaskRepeat(Runnable runnable, int interval) {
+    public static void runTaskRepeat(@Nullable final Runnable runnable, final int interval) {
         if (runnable != null) {
             if (IMP == null) {
                 throw new IllegalArgumentException("disabled");
             }
-            return IMP.taskRepeat(runnable, interval);
-        }
-        return -1;
-    }
-
-    public static int runTaskRepeatAsync(Runnable runnable, int interval) {
-        if (runnable != null) {
-            if (IMP == null) {
-                throw new IllegalArgumentException("disabled");
-            }
-            return IMP.taskRepeatAsync(runnable, interval);
-        }
-        return -1;
-    }
-
-    public static void runTaskAsync(Runnable runnable) {
-        if (runnable != null) {
-            if (IMP == null) {
-                runnable.run();
-                return;
-            }
-            IMP.taskAsync(runnable);
+            IMP.taskRepeat(runnable, interval);
         }
     }
 
-    public static void runTask(Runnable runnable) {
-        if (runnable != null) {
-            if (IMP == null) {
-                runnable.run();
-                return;
-            }
-            IMP.task(runnable);
-        }
-    }
-
-    /**
-     * Run task later.
-     *
-     * @param runnable The task
-     * @param delay    The delay in ticks
-     */
-    public static void runTaskLater(Runnable runnable, int delay) {
-        if (runnable != null) {
-            if (IMP == null) {
-                runnable.run();
-                return;
-            }
-            IMP.taskLater(runnable, delay);
-        }
-    }
-
-    public static void runTaskLaterAsync(Runnable runnable, int delay) {
-        if (runnable != null) {
-            if (IMP == null) {
-                runnable.run();
-                return;
-            }
-            IMP.taskLaterAsync(runnable, delay);
-        }
-    }
-
-    public <T> T sync(final RunnableVal<T> function) {
+    public <T> T sync(@NotNull final RunnableVal<T> function) {
         return sync(function, Integer.MAX_VALUE);
     }
 
-    public <T> T sync(final RunnableVal<T> function, int timeout) {
+    public <T> T sync(@NotNull final RunnableVal<T> function, final int timeout) {
         if (Bukkit.isPrimaryThread()) {
             function.run();
             return function.value;
@@ -129,17 +72,8 @@ public abstract class TaskManager {
         return function.value;
     }
 
-    public abstract int taskRepeat(Runnable runnable, int interval);
+    public abstract void taskRepeat(@NotNull final Runnable runnable, final int interval);
 
-    public abstract int taskRepeatAsync(Runnable runnable, int interval);
+    public abstract void task(@NotNull final Runnable runnable);
 
-    public abstract void taskAsync(Runnable runnable);
-
-    public abstract void task(Runnable runnable);
-
-    public abstract void taskLater(Runnable runnable, int delay);
-
-    public abstract void taskLaterAsync(Runnable runnable, int delay);
-
-    public abstract void cancelTask(int task);
 }

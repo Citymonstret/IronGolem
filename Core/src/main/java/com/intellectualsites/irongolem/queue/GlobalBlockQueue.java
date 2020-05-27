@@ -30,7 +30,6 @@ import org.bukkit.Bukkit;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,7 +42,7 @@ public class GlobalBlockQueue {
     private final ConcurrentLinkedDeque<Runnable> runnables;
     private final AtomicBoolean running;
     private final int targetTime;
-    private QueueProvider provider;
+    private final QueueProvider provider;
     /**
      * Used to calculate elapsed time in milliseconds and ensure block placement doesn't lag the
      * server
@@ -78,14 +77,6 @@ public class GlobalBlockQueue {
         this.PARALLEL_THREADS = threads;
     }
 
-    public QueueProvider getProvider() {
-        return provider;
-    }
-
-    public void setProvider(QueueProvider provider) {
-        this.provider = provider;
-    }
-
     public LocalBlockQueue getNewQueue(String world, boolean autoQueue) {
         LocalBlockQueue queue = provider.getNewQueue(world);
         if (autoQueue) {
@@ -94,20 +85,12 @@ public class GlobalBlockQueue {
         return queue;
     }
 
-    public boolean stop() {
-        if (!running.get()) {
-            return false;
-        }
-        running.set(false);
-        return true;
-    }
-
-    public boolean runTask() {
+    public void runTask() {
         if (running.get()) {
-            return false;
+            return;
         }
         running.set(true);
-        TaskManager.runTaskRepeat((Runnable) () -> {
+        TaskManager.runTaskRepeat(() -> {
             if (inactiveQueues.isEmpty() && activeQueues.isEmpty()) {
                 lastPeriod = 0;
                 GlobalBlockQueue.this.runEmptyTasks();
@@ -153,100 +136,17 @@ public class GlobalBlockQueue {
                 e.printStackTrace();
             }
         }, 1);
-        return true;
-    }
-
-    public QueueStage getStage(LocalBlockQueue queue) {
-        if (activeQueues.contains(queue)) {
-            return QueueStage.ACTIVE;
-        } else if (inactiveQueues.contains(queue)) {
-            return QueueStage.INACTIVE;
-        }
-        return QueueStage.NONE;
-    }
-
-    public boolean isStage(LocalBlockQueue queue, QueueStage stage) {
-        switch (stage) {
-            case ACTIVE:
-                return activeQueues.contains(queue);
-            case INACTIVE:
-                return inactiveQueues.contains(queue);
-            case NONE:
-                return !activeQueues.contains(queue) && !inactiveQueues.contains(queue);
-        }
-        return false;
     }
 
     /**
      * TODO Documentation needed.
      *
      * @param queue todo
-     * @return true if added to queue, false otherwise
      */
-    public boolean enqueue(LocalBlockQueue queue) {
-        boolean success = false;
-        success = inactiveQueues.remove(queue);
-        if (queue.size() > 0 && !activeQueues.contains(queue)) {
-            success = activeQueues.add(queue);
-        }
-        return success;
-    }
-
-    public void dequeue(LocalBlockQueue queue) {
+    public void enqueue(LocalBlockQueue queue) {
         inactiveQueues.remove(queue);
-        activeQueues.remove(queue);
-    }
-
-    public List<LocalBlockQueue> getAllQueues() {
-        ArrayList<LocalBlockQueue> list =
-            new ArrayList<>(activeQueues.size() + inactiveQueues.size());
-        list.addAll(inactiveQueues);
-        list.addAll(activeQueues);
-        return list;
-    }
-
-    public List<LocalBlockQueue> getActiveQueues() {
-        return new ArrayList<>(activeQueues);
-    }
-
-    public List<LocalBlockQueue> getInactiveQueues() {
-        return new ArrayList<>(inactiveQueues);
-    }
-
-    public void flush(LocalBlockQueue queue) {
-        SET_TASK.value1 = Long.MAX_VALUE;
-        SET_TASK.value2 = queue;
-        if (SET_TASK.value2 == null) {
-            return;
-        }
-        if (Bukkit.isPrimaryThread()) {
-            throw new IllegalStateException("Cannot flush on the main thread");
-        }
-        try {
-            if (PARALLEL_THREADS <= 1) {
-                SET_TASK.run();
-            } else {
-                ArrayList<Thread> threads = new ArrayList<>();
-                for (int i = 0; i < PARALLEL_THREADS; i++) {
-                    Thread thread = new Thread(SET_TASK);
-                    thread.setName("PlotSquared Flush Task");
-                    threads.add(thread);
-                }
-                for (Thread thread : threads) {
-                    thread.start();
-                }
-                for (Thread thread : threads) {
-                    try {
-                        thread.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        } finally {
-           dequeue(queue);
+        if (queue.size() > 0 && !activeQueues.contains(queue)) {
+            activeQueues.add(queue);
         }
     }
 
@@ -300,19 +200,18 @@ public class GlobalBlockQueue {
         return activeQueues.size() == 0 && inactiveQueues.size() == 0;
     }
 
-    public boolean addEmptyTask(final Runnable whenDone) {
+    public void addEmptyTask(final Runnable whenDone) {
         if (this.isDone()) {
             // Run
             this.runEmptyTasks();
             if (whenDone != null) {
                 whenDone.run();
             }
-            return true;
+            return;
         }
         if (whenDone != null) {
             this.runnables.add(whenDone);
         }
-        return false;
     }
 
     private synchronized void runEmptyTasks() {
@@ -326,7 +225,4 @@ public class GlobalBlockQueue {
         }
     }
 
-    public enum QueueStage {
-        INACTIVE, ACTIVE, NONE
-    }
 }

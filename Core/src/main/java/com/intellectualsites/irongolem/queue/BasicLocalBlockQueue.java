@@ -43,7 +43,6 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
     private LocalChunk lastWrappedChunk;
     private int lastX = Integer.MIN_VALUE;
     private int lastZ = Integer.MIN_VALUE;
-    private boolean setbiome = false;
 
     public BasicLocalBlockQueue(String world) {
         this.world = world;
@@ -51,8 +50,6 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
     }
 
     public abstract LocalChunk getLocalChunk(int x, int z);
-
-    @Override public abstract BlockWrapper getBlock(int x, int y, int z);
 
     public abstract void setComponents(LocalChunk lc)
         throws ExecutionException, InterruptedException;
@@ -95,13 +92,13 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
         return modified;
     }
 
-    @Override public final void setModified(long modified) {
+    @Override public final void setModified(final long modified) {
         this.modified = modified;
     }
 
-    @Override public boolean setBlock(int x, int y, int z, BlockWrapper data) {
+    @Override public void setBlock(final int x, final int y, final int z, @NotNull final BlockWrapper data) {
         if ((y > 255) || (y < 0)) {
-            return false;
+            return;
         }
         int cx = x >> 4;
         int cz = z >> 4;
@@ -115,17 +112,17 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
                 lastWrappedChunk.setBlock(x & 15, y, z & 15, data);
                 LocalChunk previous = this.blockChunks.put(pair, lastWrappedChunk);
                 if (previous == null) {
-                    return chunks.add(lastWrappedChunk);
+                    chunks.add(lastWrappedChunk);
+                    return;
                 }
                 this.blockChunks.put(pair, previous);
                 lastWrappedChunk = previous;
             }
         }
         lastWrappedChunk.setBlock(x & 15, y, z & 15, data);
-        return true;
     }
 
-    public abstract class LocalChunk {
+    public abstract static class LocalChunk {
         public final BasicLocalBlockQueue parent;
         public final int z;
         public final int x;
@@ -158,7 +155,7 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
     }
 
 
-    public class BasicLocalChunk extends LocalChunk {
+    public static class BasicLocalChunk extends LocalChunk {
 
         public BasicLocalChunk(BasicLocalBlockQueue parent, int x, int z) {
             super(parent, x, z);

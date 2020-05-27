@@ -25,54 +25,24 @@
  */
 package com.intellectualsites.irongolem.queue;
 
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 public class BukkitTaskManager extends TaskManager {
 
     private final Plugin bukkitMain;
 
-    public BukkitTaskManager(Plugin bukkitMain) {
+    public BukkitTaskManager(@NotNull final Plugin bukkitMain) {
         this.bukkitMain = bukkitMain;
     }
 
-    @Override public int taskRepeat(Runnable runnable, int interval) {
-        return this.bukkitMain.getServer().getScheduler()
+    @Override public void taskRepeat(@NotNull final Runnable runnable, final int interval) {
+        this.bukkitMain.getServer().getScheduler()
             .scheduleSyncRepeatingTask(this.bukkitMain, runnable, interval, interval);
     }
 
-    @SuppressWarnings("deprecation") @Override
-    public int taskRepeatAsync(Runnable runnable, int interval) {
-        return this.bukkitMain.getServer().getScheduler()
-            .scheduleAsyncRepeatingTask(this.bukkitMain, runnable, interval, interval);
-    }
-
-    @Override public void taskAsync(Runnable runnable) {
-        if (this.bukkitMain.isEnabled()) {
-            this.bukkitMain.getServer().getScheduler()
-                .runTaskAsynchronously(this.bukkitMain, runnable);
-        } else {
-            runnable.run();
-        }
-    }
-
-    @Override public void task(Runnable runnable) {
+    @Override public void task(@NotNull final Runnable runnable) {
         this.bukkitMain.getServer().getScheduler().runTask(this.bukkitMain, runnable).getTaskId();
     }
 
-    @Override public void taskLater(Runnable runnable, int delay) {
-        this.bukkitMain.getServer().getScheduler().runTaskLater(this.bukkitMain, runnable, delay)
-            .getTaskId();
-    }
-
-    @Override public void taskLaterAsync(Runnable runnable, int delay) {
-        this.bukkitMain.getServer().getScheduler()
-            .runTaskLaterAsynchronously(this.bukkitMain, runnable, delay);
-    }
-
-    @Override public void cancelTask(int task) {
-        if (task != -1) {
-            Bukkit.getScheduler().cancelTask(task);
-        }
-    }
 }

@@ -26,6 +26,7 @@
 package com.intellectualsites.irongolem.queue;
 
 public abstract class RunnableVal2<T, U> implements Runnable {
+
     public T value1;
     public U value2;
 

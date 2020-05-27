@@ -29,7 +29,6 @@ import com.google.common.io.ByteSource;
 import com.intellectualsites.irongolem.queue.BasicLocalBlockQueue;
 import com.intellectualsites.irongolem.restoration.QueueRestorationHandler;
 import com.intellectualsites.irongolem.util.BlockWrapper;
-import com.intellectualsites.irongolem.util.BlockWrapperFactory;
 import io.papermc.lib.PaperLib;
 import net.minecraft.server.v1_15_R1.BlockPosition;
 import net.minecraft.server.v1_15_R1.EnumDirection;
@@ -38,7 +37,6 @@ import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import net.minecraft.server.v1_15_R1.TileEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -67,16 +65,6 @@ public class BukkitLocalQueue extends BasicLocalBlockQueue {
     @Override public LocalChunk getLocalChunk(int x, int z) {
         return new BasicLocalChunk(this, x, z) {
         };
-    }
-
-    @Override public BlockWrapper getBlock(int x, int y, int z) {
-        World worldObj = Bukkit.getWorld(getWorld());
-        if (worldObj != null) {
-            Block block = worldObj.getBlockAt(x, y, z);
-            return BlockWrapperFactory.getFactory().createWrapper(block);
-        } else {
-            return new BlockWrapper(Material.AIR.createBlockData(), new byte[0]);
-        }
     }
 
     @Override public final void setComponents(LocalChunk lc) {
