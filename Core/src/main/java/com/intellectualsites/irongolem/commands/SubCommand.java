@@ -17,6 +17,7 @@
 
 package com.intellectualsites.irongolem.commands;
 
+import com.intellectualsites.irongolem.IronGolem;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -27,8 +28,10 @@ import java.util.List;
 public abstract class SubCommand {
 
     private final String[] aliases;
+    private final IronGolem ironGolem;
 
-    public SubCommand(@NotNull final String[] aliases) {
+    public SubCommand(@NotNull final IronGolem ironGolem, @NotNull final String[] aliases) {
+        this.ironGolem = ironGolem;
         this.aliases = aliases;
     }
 
@@ -51,5 +54,14 @@ public abstract class SubCommand {
 
     public abstract void handleCommand(@NotNull final Player player, @NotNull final String[] args);
 
+    /**
+     * Get the {@link IronGolem} instance that was used
+     * when creating this sub command
+     *
+     * @return IronGolem instance
+     */
+    @NotNull public final IronGolem getIronGolem() {
+        return this.ironGolem;
+    }
 
 }

@@ -19,6 +19,7 @@ package com.intellectualsites.irongolem;
 
 import com.intellectualsites.irongolem.logging.ChangeLogger;
 import com.intellectualsites.irongolem.restoration.RestorationHandler;
+import com.intellectualsites.irongolem.util.UsernameMapper;
 import org.jetbrains.annotations.NotNull;
 
 public interface IronGolemAPI {
@@ -38,5 +39,12 @@ public interface IronGolemAPI {
      * @return Restoration handler
      */
     @NotNull RestorationHandler getRestorationHandler();
+
+    /**
+     * Get the username mapper
+     *
+     * @return Username mapper
+     */
+    @NotNull UsernameMapper getUsernameMapper();
 
 }

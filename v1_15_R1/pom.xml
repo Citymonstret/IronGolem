@@ -68,20 +68,12 @@
                             <shadedPattern>com.intellectualsites.irongolem.messages</shadedPattern>
                         </relocation>
                         <relocation>
-                            <pattern>co.aikar.taskchain</pattern>
-                            <shadedPattern>com.intellectualsites.irongolem.aikar.taskchain</shadedPattern>
-                        </relocation>
-                        <relocation>
-                            <pattern>co.aikar.util</pattern>
-                            <shadedPattern>com.intellectualsites.irongolem.aikar.util</shadedPattern>
-                        </relocation>
-                        <relocation>
                             <pattern>io.papermc.lib</pattern>
                             <shadedPattern>com.intellectualsites.irongolem.paperlib</shadedPattern> <!-- Replace this -->
                         </relocation>
                         <relocation>
-                            <pattern>me.lucko.commodore</pattern>
-                            <shadedPattern>com.intellectualsites.irongolem.commodore</shadedPattern>
+                            <pattern>com.google</pattern>
+                            <shadedPattern>com.intellectualsites.irongolem.google</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>

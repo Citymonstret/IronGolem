@@ -17,6 +17,9 @@
 
 package com.intellectualsites.irongolem.commands;
 
+import com.google.common.base.Enums;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Sets;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,10 +28,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -168,6 +175,81 @@ public class CommandFlags {
         @Override public List<String> getSuggestions() {
             return IntStream.range(1, 100).mapToObj(Integer::toString).collect(Collectors.toList());
         }
+    }
+
+    public static class EnumFlag<E extends Enum<E>> extends Flag<Collection<E>> {
+
+        private final Class<E> clazz;
+        private final List<String> permutations = new LinkedList<>();
+
+        protected EnumFlag(@NotNull final Class<E> clazz, @NotNull final String[] flagAliases) {
+            super(flagAliases);
+            this.clazz = clazz;
+
+            final Set<Set<E>> powerSet = Sets.powerSet(EnumSet.allOf(clazz));
+            for (final Set<E> enums : powerSet) {
+                if (enums.size() == 1) {
+                    permutations.addAll(enums.stream().map(Enum::name).map(String::toLowerCase)
+                        .collect(Collectors.toList()));
+                } else if (enums.size() > 1) {
+                    for (final List<E> list : Collections2.permutations(enums)) {
+                        final Iterator<E> iterator = list.iterator();
+                        final StringBuilder builder = new StringBuilder();
+                        while (iterator.hasNext()) {
+                            builder.append(iterator.next().name().toLowerCase());
+                            if (iterator.hasNext()) {
+                                builder.append(",");
+                            }
+                        }
+                        permutations.add(builder.toString());
+                    }
+                }
+            }
+        }
+
+        @Override public Collection<E> parse(@NotNull final String value) throws IllegalArgumentException {
+            final String[] parts = value.split(",");
+            final Collection<E> values = EnumSet.noneOf(clazz);
+            for (final String part : parts) {
+                final E parsedValue = Enums.getIfPresent(clazz, part.toUpperCase(Locale.ENGLISH))
+                    .toJavaUtil().orElseThrow(() -> new IllegalArgumentException("Unknown value: " + part));
+                if (values.contains(parsedValue)) {
+                    continue;
+                }
+                values.add(parsedValue);
+            }
+            return values;
+        }
+
+        public static <E extends Enum<E>> EnumFlag<E> of(@NotNull final Class<E> clazz, final String ... aliases) {
+            return new EnumFlag<>(clazz, aliases);
+        }
+
+        @Override public List<String> getSuggestions() {
+            return Collections.unmodifiableList(this.permutations);
+        }
+
+    }
+
+    public static class BooleanFlag extends Flag<Boolean> {
+
+        protected BooleanFlag(@NotNull final String[] flagAliases) {
+            super(flagAliases);
+        }
+
+        @Override public Boolean parse(@NotNull final String value) throws IllegalArgumentException {
+            if (value.equalsIgnoreCase("true")) {
+                return true;
+            } else if (value.equalsIgnoreCase("false")) {
+                return false;
+            }
+            throw new IllegalArgumentException("Value has to be either 'true' or 'false'");
+        }
+
+        public static BooleanFlag of(@NotNull final String ... aliases) {
+            return new BooleanFlag(aliases);
+        }
+
     }
 
 }

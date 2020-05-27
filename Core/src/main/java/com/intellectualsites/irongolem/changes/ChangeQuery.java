@@ -24,7 +24,12 @@ import com.intellectualsites.irongolem.util.PointRegion;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -36,6 +41,8 @@ public class ChangeQuery {
     private World world;
     private int limit = Short.MAX_VALUE;
     private boolean distinct = false;
+    private EnumSet<ChangeReason> reasons = EnumSet.allOf(ChangeReason.class);
+    private ChangeSource changeSource;
 
     private ChangeQuery() {
     }
@@ -45,7 +52,7 @@ public class ChangeQuery {
      *
      * @return New query
      */
-    public static ChangeQuery newQuery() {
+    @NotNull public static ChangeQuery newQuery() {
         return new ChangeQuery();
     }
 
@@ -55,7 +62,7 @@ public class ChangeQuery {
      * @param world World to query in
      * @return The query instance
      */
-    public ChangeQuery inWorld(@NotNull final World world) {
+    @NotNull public ChangeQuery inWorld(@NotNull final World world) {
         this.world = Preconditions.checkNotNull(world, "World may not be null");
         return this;
     }
@@ -66,7 +73,7 @@ public class ChangeQuery {
      * @param region Region
      * @return The query instance
      */
-    public ChangeQuery inRegion(@NotNull final CuboidRegion region) {
+    @NotNull public ChangeQuery inRegion(@NotNull final CuboidRegion region) {
         this.region = Preconditions.checkNotNull(region, "Region may not be null");
         return this;
     }
@@ -77,10 +84,46 @@ public class ChangeQuery {
      * @param location Location
      * @return The query instance
      */
-    public ChangeQuery atLocation(@NotNull final Location location) {
+    @NotNull public ChangeQuery atLocation(@NotNull final Location location) {
         Preconditions.checkNotNull(location, "Location may not be null");
         this.world = location.getWorld();
         this.region = PointRegion.at(location.toVector());
+        return this;
+    }
+
+    /**
+     * Query for specific change reasons
+     *
+     * @param reasons Reasons to query for
+     * @return The query instance
+     */
+    @NotNull public ChangeQuery withReasons(final ChangeReason first, final ChangeReason ... reasons) {
+        this.reasons = EnumSet.of(first, reasons);
+        return this;
+    }
+
+    /**
+     * Query for specific change reasons
+     *
+     * @param reasons Reasons to query for
+     * @return The query instance
+     */
+    @NotNull public ChangeQuery withReasons(final Collection<ChangeReason> reasons) {
+        this.reasons = EnumSet.copyOf(reasons);
+        return this;
+    }
+
+
+    /**
+     * Query for all change reasons but the ones
+     * specified
+     *
+     * @param reasons Reasons to not query for
+     * @return the Query instance
+     */
+    @NotNull public ChangeQuery withoutReasons(final ChangeReason first, final ChangeReason ... reasons) {
+        this.reasons = EnumSet.allOf(ChangeReason.class);
+        this.reasons.removeAll(EnumSet.of(first, reasons));
         return this;
     }
 
@@ -89,7 +132,7 @@ public class ChangeQuery {
      *
      * @return The query instance
      */
-    public ChangeQuery distinctValues() {
+    @NotNull public ChangeQuery distinctValues() {
        this.distinct = true;
        return this;
     }
@@ -100,7 +143,7 @@ public class ChangeQuery {
      * @param limit Change limit
      * @return The query instance
      */
-    public ChangeQuery withLimit(int limit) {
+    @NotNull public ChangeQuery withLimit(int limit) {
         if (limit == -1) {
             limit = Integer.MAX_VALUE;
         }
@@ -110,11 +153,22 @@ public class ChangeQuery {
     }
 
     /**
+     * Query for changes made by a specific source
+     *
+     * @param changeSource Change source
+     * @return The query instance
+     */
+    @NotNull public ChangeQuery withSource(@NotNull final ChangeSource changeSource) {
+        this.changeSource = Preconditions.checkNotNull(changeSource);
+        return this;
+    }
+
+    /**
      * Get the region that is queried in
      *
      * @return Region
      */
-    public CuboidRegion getRegion() {
+    @NotNull public CuboidRegion getRegion() {
         return this.region;
     }
 
@@ -123,7 +177,7 @@ public class ChangeQuery {
      *
      * @return World
      */
-    public World getWorld() {
+    @NotNull public World getWorld() {
         return this.world;
     }
 
@@ -144,6 +198,25 @@ public class ChangeQuery {
      */
     public boolean shouldUseDistinct() {
         return this.distinct;
+    }
+
+    /**
+     * Get the reasons queried for
+     *
+     * @return Change reasons
+     */
+    @NotNull public Set<ChangeReason> getReasons() {
+        return Collections.unmodifiableSet(this.reasons);
+    }
+
+    /**
+     * Get the (optional) change source that was
+     * queried for
+     *
+     * @return Change source
+     */
+    @Nullable public ChangeSource getChangeSource() {
+        return this.changeSource;
     }
 
     /**

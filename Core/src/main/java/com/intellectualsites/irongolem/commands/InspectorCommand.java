@@ -17,6 +17,7 @@
 
 package com.intellectualsites.irongolem.commands;
 
+import com.intellectualsites.irongolem.IronGolem;
 import com.intellectualsites.irongolem.inspector.Inspector;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -31,8 +32,8 @@ public class InspectorCommand extends SubCommand {
 
     private final CommandFlags commandFlags = new CommandFlags();
 
-    public InspectorCommand() {
-        super(ALIASES);
+    public InspectorCommand(@NotNull final IronGolem ironGolem) {
+        super(ironGolem, ALIASES);
         this.commandFlags.registerFlag(CommandFlags.IntegerFlag.of("range", "r"));
         this.commandFlags.registerFlag(CommandFlags.IntegerFlag.of("limit", "l"));
     }

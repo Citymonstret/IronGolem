@@ -39,6 +39,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -120,6 +121,22 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
                     if (query.shouldUseDistinct()) {
                         builder.append(" AND `event_id` IN (SELECT MIN(`event_id`) FROM `events` WHERE `world` = ? AND `x` >= ? AND `x` <= ? AND `y` >= ? AND `y` <= ? AND `z` >= ? AND `z` <= ? GROUP BY `world`, `x`, `y`, `z`)");
                     }
+
+                    // Append reasons
+                    builder.append(" AND `reason` IN (");
+                    final Iterator<ChangeReason> reasons = query.getReasons().iterator();
+                    while (reasons.hasNext()) {
+                        builder.append('\'').append(reasons.next().name()).append('\'');
+                        if (reasons.hasNext()) {
+                            builder.append(", ");
+                        }
+                    }
+                    builder.append(")");
+
+                    if (query.getChangeSource() != null) {
+                        builder.append(" AND `source` = ?");
+                    }
+
                     builder.append(" LIMIT ?");
 
                     try (final PreparedStatement statement = this.getConnection().prepareStatement(builder.toString())) {
@@ -139,6 +156,9 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
                             statement.setInt(index++, region.getMaximumPoint().getBlockY());
                             statement.setInt(index++, region.getMinimumPoint().getBlockZ());
                             statement.setInt(index++, region.getMaximumPoint().getBlockZ());
+                        }
+                        if (query.getChangeSource() != null) {
+                            statement.setString(index++, query.getChangeSource().getName());
                         }
                         statement.setInt(index, query.getLimit());
                         try (final ResultSet resultSet = statement.executeQuery()) {

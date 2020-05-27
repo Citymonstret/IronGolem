@@ -27,6 +27,7 @@ import com.intellectualsites.irongolem.restoration.QueueRestorationHandler;
 import com.intellectualsites.irongolem.restoration.RestorationHandler;
 import com.intellectualsites.irongolem.storage.SQLiteLogger;
 import com.intellectualsites.irongolem.util.BlockWrapperFactory;
+import com.intellectualsites.irongolem.util.UsernameMapper;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -43,6 +44,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
     private ChangeLogger changeLogger;
     private RestorationHandler restorationHandler;
     private BlockWrapperFactory blockWrapperFactory;
+    private UsernameMapper usernameMapper;
 
     @Override public void onEnable() {
         final String version;
@@ -94,6 +96,13 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
                 LOGGER.error("Failed to initialize the queueing restoration handler", e);
             }
         }
+        try {
+            this.usernameMapper = new UsernameMapper(this);
+        } catch (final Exception e) {
+            LOGGER.error("Failed to load username mapper", e);
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
         if (this.changeLogger == null || !this.changeLogger.startLogging()) {
             LOGGER.error("Failed to start change logger");
             Bukkit.getPluginManager().disablePlugin(this);
@@ -101,7 +110,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
         } else {
             Bukkit.getPluginManager().registerEvents(new BlockListener(this.changeLogger), this);
             Bukkit.getPluginManager().registerEvents(new InspectorListener(), this);
-            Objects.requireNonNull(getCommand("irongolem")).setExecutor(new CommandManager());
+            Objects.requireNonNull(getCommand("irongolem")).setExecutor(new CommandManager(this));
         }
         Bukkit.getServicesManager()
             .register(IronGolemAPI.class, this, this, ServicePriority.Highest);
@@ -117,6 +126,10 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
 
     @Override public void onDisable() {
         this.changeLogger.stopLogger();
+    }
+
+    @NotNull @Override public UsernameMapper getUsernameMapper() {
+        return this.usernameMapper;
     }
 
 }

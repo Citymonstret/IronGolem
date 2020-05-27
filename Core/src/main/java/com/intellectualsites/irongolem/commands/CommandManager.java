@@ -17,13 +17,16 @@
 
 package com.intellectualsites.irongolem.commands;
 
-import org.bukkit.ChatColor;
+import com.intellectualsites.irongolem.IronGolem;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -33,13 +36,18 @@ import java.util.stream.Collectors;
 
 public class CommandManager implements CommandExecutor, TabCompleter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandManager.class);
     private static final String[] HELP_ARGS = new String[] {"help"};
 
-    private Collection<SubCommand> subCommands = new LinkedList<>();
+    private final Collection<SubCommand> subCommands = new LinkedList<>();
 
+    private final IronGolem ironGolem;
 
-    public CommandManager() {
-        this.registerSubCommand(new InspectorCommand());
+    public CommandManager(@NotNull final IronGolem ironGolem) {
+        this.ironGolem = ironGolem;
+        this.registerSubCommand(new InspectorCommand(ironGolem));
+        this.registerSubCommand(new LookupCommand());
+        this.registerSubCommand(new RestoreCommand());
     }
 
     public void registerSubCommand(@NotNull final SubCommand subCommand) {
@@ -66,17 +74,11 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 if (newArgs.length > 0) {
                     System.arraycopy(args, 1, newArgs, 0, newArgs.length);
                 }
-                try {
-                    subCommand.handleCommand(player, newArgs);
-                } catch (final Exception e) {
-                    // TODO: handle this
-                    player.sendMessage(
-                        ChatColor.RED + "Something went wrong when executing the command...");
-                }
+                Bukkit.getScheduler().runTaskAsynchronously(this.ironGolem,
+                    new CommandExecutionInstance(player, newArgs, subCommand));
                 return true;
             }
         }
-
         player.sendMessage("Unknown command!!");
 
         return true;
