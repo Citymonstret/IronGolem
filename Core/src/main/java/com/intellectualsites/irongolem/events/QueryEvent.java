@@ -19,16 +19,18 @@ package com.intellectualsites.irongolem.events;
 
 import com.intellectualsites.irongolem.changes.ChangeQuery;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class QueryEvent extends PlayerEvent {
+public abstract class QueryEvent extends Event {
 
     private final ChangeQuery query;
+    private final Player player;
 
     protected QueryEvent(@NotNull final ChangeQuery query, @NotNull final Player player) {
-        super(player);
+        super(true);
         this.query = query;
+        this.player = player;
     }
 
     /**
@@ -39,6 +41,15 @@ public abstract class QueryEvent extends PlayerEvent {
      */
     @NotNull public final ChangeQuery getQuery() {
         return this.query;
+    }
+
+    /**
+     * Returns the player involved in this event
+     *
+     * @return Player who is involved in this event
+     */
+    @NotNull public final Player getPlayer() {
+        return this.player;
     }
 
 }

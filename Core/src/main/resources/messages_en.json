@@ -1,0 +1,8 @@
+{
+  "prefix": "<dark_gray>[<gold>IG</gold>]</dark_gray> ",
+  "command.error": "<red>Something went wrong when executing the command. Error: <message></red>",
+  "command.not-permitted": "<red>You are not permitted to use that command.</red>",
+  "command.not-found": "<red>There is no such command.</red>",
+  "command.missing.range": "<red>You need to specify a range.</red>",
+  "query.failure": "<red>Failed to query the changes. Error: <message></red>"
+}

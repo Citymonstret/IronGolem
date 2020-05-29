@@ -17,6 +17,7 @@
 
 package com.intellectualsites.irongolem;
 
+import com.intellectualsites.irongolem.configuration.MessageHandler;
 import com.intellectualsites.irongolem.logging.ChangeLogger;
 import com.intellectualsites.irongolem.players.PlayerManager;
 import com.intellectualsites.irongolem.restoration.RestorationHandler;
@@ -54,5 +55,12 @@ public interface IronGolemAPI {
      * @return Player manager
      */
     @NotNull PlayerManager getPlayerManager();
+
+    /**
+     * Get the message handler
+     *
+     * @return Message handler
+     */
+    @NotNull MessageHandler getMessageHandler();
 
 }

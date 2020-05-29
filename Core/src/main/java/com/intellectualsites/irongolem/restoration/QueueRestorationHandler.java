@@ -32,9 +32,12 @@ import com.intellectualsites.irongolem.queue.QueueProvider;
 import com.intellectualsites.irongolem.queue.RunnableVal;
 import com.intellectualsites.irongolem.queue.TaskManager;
 import com.intellectualsites.irongolem.util.BlockWrapper;
+import com.intellectualsites.irongolem.util.CuboidRegion;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -87,10 +90,14 @@ public class QueueRestorationHandler implements RestorationHandler {
         }
     }
 
+    private final Object regionLock = new Object();
     private final IronGolem ironGolem;
+    private final Collection<CuboidRegion> regions;
+
 
     public QueueRestorationHandler(@NotNull final IronGolem plugin, final Class<? extends LocalBlockQueue> queue) {
         this.ironGolem = plugin;
+        this.regions = new HashSet<>();
         // Init the coordinate cache
         initCache();
         // Set the task manager implementation
@@ -102,9 +109,13 @@ public class QueueRestorationHandler implements RestorationHandler {
         GlobalBlockQueue.IMP.runTask();
     }
 
-    @Override public void restore(@NotNull final Changes changes, @NotNull final ChangeSource source, @NotNull final Runnable completionTask) {
+    @Override public void restore(@NotNull final Changes changes, @NotNull final ChangeSource source, @NotNull final Runnable completionTask)
+        throws RegionLockedException {
         if (!changes.isDistinct()) {
             throw new IllegalArgumentException("Only distinct change sets can be restored to");
+        }
+        if (!this.createRegionLock(changes.getRegion())) {
+            throw new RegionLockedException(changes.getRegion());
         }
         // Calculate the changes
         final RunnableVal<List<Change>> changesTask = new RunnableVal<List<Change>>(new LinkedList<>()) {
@@ -139,7 +150,32 @@ public class QueueRestorationHandler implements RestorationHandler {
                     new BlockWrapper(blockSubject.getFrom(), blockSubject.serializeOldState()));
         }
         localBlockQueue.enqueue();
-        GlobalBlockQueue.IMP.addEmptyTask(completionTask);
+
+        final Runnable overriddenCompletionTask = () -> {
+            this.freeRegion(changes.getRegion());
+            completionTask.run();
+        };
+
+        GlobalBlockQueue.IMP.addEmptyTask(overriddenCompletionTask);
+    }
+
+    @Override public boolean createRegionLock(@NotNull final com.intellectualsites.irongolem.util.CuboidRegion region) {
+        synchronized (this.regionLock) {
+            for (final com.intellectualsites.irongolem.util.CuboidRegion lockingRegion : this.regions) {
+                if (lockingRegion.intersects(region)) {
+                    return false;
+                }
+            }
+            this.regions.add(region);
+        }
+        return true;
+    }
+
+    @Override
+    public void freeRegion(@NotNull final com.intellectualsites.irongolem.util.CuboidRegion region) {
+        synchronized (this.regionLock) {
+            this.regions.remove(region);
+        }
     }
 
 }

@@ -20,6 +20,8 @@ package com.intellectualsites.irongolem.util;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 /**
  * A region containing two corners
  */
@@ -31,6 +33,16 @@ public class CuboidRegion {
     protected CuboidRegion(@NotNull final Vector point1, @NotNull final Vector point2) {
         this.minimumPoint = new Vector(Math.min(point1.getBlockX(), point2.getBlockX()), Math.min(point1.getBlockY(), point2.getBlockY()), Math.min(point1.getBlockZ(), point2.getBlockZ()));
         this.maximumPoint = new Vector(Math.max(point1.getBlockX(), point2.getBlockX()), Math.max(point1.getBlockY(), point2.getBlockY()), Math.max(point1.getBlockZ(), point2.getBlockZ()));
+    }
+
+    public static CuboidRegion of(@NotNull final Vector minimumPoint, @NotNull final Vector maximumPoint) {
+        return new CuboidRegion(minimumPoint, maximumPoint);
+    }
+
+    public static CuboidRegion surrounding(@NotNull final Vector center, final int radius) {
+        final Vector minimum = center.clone().subtract(new Vector(radius, radius, radius));
+        final Vector maximum = center.clone().add(new Vector(radius, radius, radius));
+        return of(minimum, maximum);
     }
 
     /**
@@ -87,14 +99,34 @@ public class CuboidRegion {
         return (long) this.getWidth() * (long) this.getHeight() * (long) this.getDepth();
     }
 
-    public static CuboidRegion of(@NotNull final Vector minimumPoint, @NotNull final Vector maximumPoint) {
-        return new CuboidRegion(minimumPoint, maximumPoint);
+    /**
+     * Check if the two regions overlap
+     *
+     * @param other Other region
+     * @return True if the regions overlap
+     */
+    public boolean intersects(@NotNull final CuboidRegion other) {
+        final Vector otherMin = other.getMinimumPoint();
+        final Vector otherMax = other.getMaximumPoint();
+
+        return otherMin.getX() <= this.maximumPoint.getX() && otherMax.getX() >= this.minimumPoint.getX()
+            && otherMin.getZ() <= this.maximumPoint.getZ() && otherMax.getZ() >= this.minimumPoint.getZ();
     }
 
-    public static CuboidRegion surrounding(@NotNull final Vector center, final int radius) {
-        final Vector minimum = center.clone().subtract(new Vector(radius, radius, radius));
-        final Vector maximum = center.clone().add(new Vector(radius, radius, radius));
-        return of(minimum, maximum);
+    @Override public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final CuboidRegion that = (CuboidRegion) o;
+        return getMinimumPoint().equals(that.getMinimumPoint()) && getMaximumPoint()
+            .equals(that.getMaximumPoint());
+    }
+
+    @Override public int hashCode() {
+        return Objects.hash(getMinimumPoint(), getMaximumPoint());
     }
 
 }

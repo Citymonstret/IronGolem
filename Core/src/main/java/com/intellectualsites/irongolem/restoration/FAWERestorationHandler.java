@@ -57,6 +57,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -65,41 +66,69 @@ public class FAWERestorationHandler implements RestorationHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FAWERestorationHandler.class);
 
+    private final Object regionLock = new Object();
     private final IronGolem ironGolem;
+    private final Collection<com.intellectualsites.irongolem.util.CuboidRegion> regions;
 
     public FAWERestorationHandler(@NotNull final IronGolem ironGolem) {
         this.ironGolem = ironGolem;
+        this.regions = new HashSet<>();
     }
 
     @Override
     public void restore(@NotNull final Changes changes, @NotNull final ChangeSource source,
-        @NotNull final Runnable completionTask) {
+        @NotNull final Runnable completionTask) throws RegionLockedException {
         if (!changes.isDistinct()) {
             throw new IllegalArgumentException("Only distinct change sets can be restored to");
         }
+        if (!this.createRegionLock(changes.getRegion())) {
+            throw new RegionLockedException(changes.getRegion());
+        }
         Bukkit.getScheduler().runTaskAsynchronously(ironGolem, () -> {
-            final com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(changes.getWorld());
-            final EditSession session =
-                new EditSessionBuilder(weWorld).checkMemory(false).fastmode(true).limitUnlimited()
-                    .changeSetNull().autoQueue(false).build();
-            final CuboidRegion region = convertRegion(changes.getRegion());
-            final ChangeExtent changeExtent =
-                new ChangeExtent(source, weWorld, region, changes.getChanges());
-            final ForwardExtentCopy forwardExtentCopy =
-                new ForwardExtentCopy(changeExtent, region, session, region.getMinimumPoint());
-            forwardExtentCopy.setCopyingEntities(false); /* TODO: Support entities */
-            forwardExtentCopy.setCopyingBiomes(false);
-            forwardExtentCopy.setRemovingEntities(false);
             try {
-                Operations.complete(forwardExtentCopy);
-            } catch (final WorldEditException e) {
+                final com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(changes.getWorld());
+                final EditSession session =
+                    new EditSessionBuilder(weWorld).checkMemory(false).fastmode(true).limitUnlimited().changeSetNull().autoQueue(false).build();
+                final CuboidRegion region = convertRegion(changes.getRegion());
+                final ChangeExtent changeExtent = new ChangeExtent(source, weWorld, region, changes.getChanges());
+                final ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(changeExtent, region, session, region.getMinimumPoint());
+                forwardExtentCopy.setCopyingEntities(false); /* TODO: Support entities */
+                forwardExtentCopy.setCopyingBiomes(false);
+                forwardExtentCopy.setRemovingEntities(false);
+                try {
+                    Operations.complete(forwardExtentCopy);
+                } catch (final WorldEditException e) {
+                    LOGGER.error("Failed to restore region", e);
+                }
+                session.flushSession();
+                // Log the restoration
+                ironGolem.getChangeLogger().logChanges(changeExtent.restorationChanges);
+                completionTask.run();
+            } catch (final Exception e) {
                 LOGGER.error("Failed to restore region", e);
+            } finally {
+                this.freeRegion(changes.getRegion());
             }
-            session.flushSession();
-            // Log the restoration
-            ironGolem.getChangeLogger().logChanges(changeExtent.restorationChanges);
-            completionTask.run();
         });
+    }
+
+    @Override public boolean createRegionLock(@NotNull final com.intellectualsites.irongolem.util.CuboidRegion region) {
+        synchronized (this.regionLock) {
+            for (final com.intellectualsites.irongolem.util.CuboidRegion lockingRegion : this.regions) {
+                if (lockingRegion.intersects(region)) {
+                    return false;
+                }
+            }
+            this.regions.add(region);
+        }
+        return true;
+    }
+
+    @Override
+    public void freeRegion(@NotNull final com.intellectualsites.irongolem.util.CuboidRegion region) {
+        synchronized (this.regionLock) {
+            this.regions.remove(region);
+        }
     }
 
     private static CuboidRegion convertRegion(

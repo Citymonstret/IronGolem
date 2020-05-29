@@ -26,6 +26,7 @@ import com.intellectualsites.irongolem.changes.ChangeSubject;
 import com.intellectualsites.irongolem.changes.PlayerSource;
 import com.intellectualsites.irongolem.events.PlayerLookupChangesEvent;
 import com.intellectualsites.irongolem.players.IGPlayer;
+import com.intellectualsites.irongolem.restoration.RegionLockedException;
 import com.intellectualsites.irongolem.util.CuboidRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -98,7 +99,11 @@ public class Inspector {
                    player.sendMessage("nuhuh");
                } else {
                    player.sendMessage("yay, starting restoration");
-                   IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes, PlayerSource.of(player), () -> player.sendMessage("am done"));
+                   try {
+                       IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes, PlayerSource.of(player), () -> player.sendMessage("am done"));
+                   } catch (final RegionLockedException e) {
+                       e.printStackTrace();
+                   }
                }
             });
         } else {

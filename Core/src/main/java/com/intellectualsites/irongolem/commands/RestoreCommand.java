@@ -23,6 +23,7 @@ import com.intellectualsites.irongolem.changes.ChangeReason;
 import com.intellectualsites.irongolem.changes.PlayerSource;
 import com.intellectualsites.irongolem.configuration.TranslatableMessage;
 import com.intellectualsites.irongolem.players.IGPlayer;
+import com.intellectualsites.irongolem.restoration.RegionLockedException;
 import com.intellectualsites.irongolem.util.CuboidRegion;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -66,8 +67,12 @@ public class RestoreCommand extends SubCommand {
                     player.sendMessage(TranslatableMessage.of("query.failure"), "message", throwable.getMessage());
                 } else {
                     player.getPlayer().sendMessage("yay, starting restoration");
-                    IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes, PlayerSource
-                        .of(player), () -> player.getPlayer().sendMessage("am done"));
+                    try {
+                        IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes, PlayerSource
+                            .of(player), () -> player.getPlayer().sendMessage("am done"));
+                    } catch (final RegionLockedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }));
     }

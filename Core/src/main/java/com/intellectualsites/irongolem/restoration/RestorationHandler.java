@@ -19,6 +19,7 @@ package com.intellectualsites.irongolem.restoration;
 
 import com.intellectualsites.irongolem.changes.ChangeSource;
 import com.intellectualsites.irongolem.changes.Changes;
+import com.intellectualsites.irongolem.util.CuboidRegion;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -37,7 +38,27 @@ public interface RestorationHandler {
      * @param changes        Changes to restore to
      * @param source         Source of the restoration
      * @param completionTask Task that runs when the restoration has been finished
+     * @throws RegionLockedException If the region is locked
      */
-    void restore(@NotNull final Changes changes, @NotNull final ChangeSource source, @NotNull final Runnable completionTask);
+    void restore(@NotNull final Changes changes, @NotNull final ChangeSource source,
+        @NotNull final Runnable completionTask) throws RegionLockedException;
+
+    /**
+     * Attempt to lock a region. This will return true if the region
+     * was successfully locked, and false if the region could not
+     * get locked.
+     *
+     * @param region Region to lock
+     * @return True if the region could be locked,
+     * false if the region could not get locked
+     */
+    boolean createRegionLock(@NotNull final CuboidRegion region);
+
+    /**
+     * Free a locked region
+     *
+     * @param region Region to free
+     */
+    void freeRegion(@NotNull final CuboidRegion region);
 
 }

@@ -49,7 +49,8 @@ public final class TranslatableMessage implements Message {
     }
 
     @Override public String getMessage() {
-        return this.key; // TODO: Make this return the actual message
+        return MessageHandler.getInstance().getTranslation("prefix") +
+            MessageHandler.getInstance().getTranslation(this.key);
     }
 
 }

@@ -18,6 +18,7 @@
 package com.intellectualsites.irongolem;
 
 import com.intellectualsites.irongolem.commands.CommandManager;
+import com.intellectualsites.irongolem.configuration.MessageHandler;
 import com.intellectualsites.irongolem.listeners.BlockListener;
 import com.intellectualsites.irongolem.listeners.InspectorListener;
 import com.intellectualsites.irongolem.listeners.PlayerListener;
@@ -48,6 +49,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
     private RestorationHandler restorationHandler;
     private BlockWrapperFactory blockWrapperFactory;
     private UsernameMapper usernameMapper;
+    private MessageHandler messageHandler;
 
     @Override public void onEnable() {
         final String version;
@@ -58,6 +60,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+        this.messageHandler = new MessageHandler(this);
         try {
             final Class<?> clazz = Class
                 .forName("com.intellectualsites.irongolem." + version + ".BlockWrapperFactoryImpl");
@@ -145,6 +148,10 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
 
     @NotNull @Override public PlayerManager getPlayerManager() {
         return this.playerManager;
+    }
+
+    @NotNull @Override public MessageHandler getMessageHandler() {
+        return this.messageHandler;
     }
 
 }
