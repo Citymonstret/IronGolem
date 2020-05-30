@@ -41,8 +41,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 
 public class MessageHandler {
 
@@ -54,6 +56,16 @@ public class MessageHandler {
 
     public MessageHandler(@NotNull final IronGolem ironGolem) {
         instance = this;
+        // Add defaults
+        try (final JsonReader reader = GSON.newJsonReader(new InputStreamReader(
+            Objects.requireNonNull(ironGolem.getResource("messages_en.json"))))) {
+            final JsonObject object = GSON.fromJson(reader, JsonObject.class);
+            for (final Map.Entry<String, JsonElement> elements : object.entrySet()) {
+                messages.put(elements.getKey(), elements.getValue().getAsString());
+            }
+        } catch (final IOException e) {
+            LOGGER.error("Failed to load messages", e);
+        }
         ironGolem.saveResource("messages_en.json", false);
         try (final JsonReader reader = GSON.newJsonReader(Files
             .newReader(new File(ironGolem.getDataFolder(), "messages_en.json"),

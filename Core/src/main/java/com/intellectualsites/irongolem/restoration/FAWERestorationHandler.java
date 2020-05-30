@@ -85,8 +85,6 @@ public class FAWERestorationHandler implements RestorationHandler {
                     new EditSessionBuilder(weWorld).checkMemory(false).fastmode(true)
                         .limitUnlimited().changeSetNull().autoQueue(false).build();
 
-                final long start = System.currentTimeMillis();
-
                 for (final Change change : changes.getChanges()) {
                     final BlockVector3 location = BukkitAdapter.asBlockVector(change.getLocation());
                     final ChangeSubject<?, ?> subject = change.getSubject();
@@ -118,9 +116,6 @@ public class FAWERestorationHandler implements RestorationHandler {
                  */
                 // Persist the changes
                 session.flushSession();
-                final long end = System.currentTimeMillis();
-
-                Bukkit.broadcastMessage(String.format("Extent copy took %dms", end - start));
 
                 // Inform the client
                 completionTask.run();

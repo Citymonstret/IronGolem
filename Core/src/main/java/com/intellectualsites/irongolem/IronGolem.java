@@ -24,7 +24,7 @@ import com.intellectualsites.irongolem.listeners.InspectorListener;
 import com.intellectualsites.irongolem.listeners.PlayerListener;
 import com.intellectualsites.irongolem.logging.ChangeLogger;
 import com.intellectualsites.irongolem.players.PlayerManager;
-import com.intellectualsites.irongolem.queue.LocalBlockQueue;
+import com.intellectualsites.irongolem.queue.BukkitLocalQueue;
 import com.intellectualsites.irongolem.restoration.FAWERestorationHandler;
 import com.intellectualsites.irongolem.restoration.QueueRestorationHandler;
 import com.intellectualsites.irongolem.restoration.RestorationHandler;
@@ -50,24 +50,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
     private MessageHandler messageHandler;
 
     @Override public void onEnable() {
-        final String version;
-        try {
-            version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-        } catch (final ArrayIndexOutOfBoundsException e) {
-            LOGGER.error("Failed to read server version");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
         this.messageHandler = new MessageHandler(this);
-        Class<? extends LocalBlockQueue> clazz;
-        try {
-            clazz = (Class<? extends LocalBlockQueue>) Class
-                .forName("com.intellectualsites.irongolem." + version + ".BukkitLocalQueue");
-        } catch (final Exception e) {
-            LOGGER.error("Failed to create the Bukkit queue");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
         if (!this.getDataFolder().exists() && !this.getDataFolder().mkdir()) {
             LOGGER.error("Failed to create data folder");
         }
@@ -86,7 +69,7 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
         } else {
             try {
                 LOGGER.info("Using the queueing restoration handler");
-                this.restorationHandler = new QueueRestorationHandler(this, clazz);
+                this.restorationHandler = new QueueRestorationHandler(this, BukkitLocalQueue.class);
             } catch (final Exception e) {
                 LOGGER.error("Failed to initialize the queueing restoration handler", e);
             }
