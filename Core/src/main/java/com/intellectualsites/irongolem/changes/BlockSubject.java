@@ -21,8 +21,11 @@ import com.google.common.base.Preconditions;
 import com.intellectualsites.irongolem.util.BlockWrapper;
 import com.intellectualsites.irongolem.util.NBTUtils;
 import com.sk89q.jnbt.CompoundTag;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockState;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -46,6 +49,8 @@ public class BlockSubject implements ChangeSubject<BlockState, CompoundTag> {
 
         this.oldFull = !this.oldState.getValue().isEmpty();
         this.newFull = !this.newState.getValue().isEmpty();
+
+        BukkitAdapter.adapt(new ItemStack(Material.COAL)).getNbtData();
     }
 
     /**

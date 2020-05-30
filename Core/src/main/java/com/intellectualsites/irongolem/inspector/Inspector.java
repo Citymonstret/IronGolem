@@ -93,7 +93,7 @@ public class Inspector {
         if (rightClick) {
             player.sendMessage("am gonna restore everything surrounding u");
             ChangeQuery.newQuery().inWorld(player.getWorld()).inRegion(CuboidRegion.surrounding(player.getLocation().toVector(), 10))
-                .distinctValues().queryChanges().whenComplete((changes, throwable) -> {
+                .distinctValues().queryChanges().whenCompleteAsync((changes, throwable) -> {
                if (throwable != null) {
                    throwable.printStackTrace();
                    player.sendMessage("nuhuh");
@@ -114,7 +114,7 @@ public class Inspector {
             if (playerLookupChangesEvent.isCancelled()) {
                 return;
             }
-            changeQuery.queryChanges().whenComplete(((changes, throwable) -> {
+            changeQuery.queryChanges().whenCompleteAsync(((changes, throwable) -> {
                 if (throwable != null) {
                     // TODO FIX
                     throwable.printStackTrace();
