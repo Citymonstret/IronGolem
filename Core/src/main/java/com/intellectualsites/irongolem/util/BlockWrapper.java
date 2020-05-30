@@ -17,6 +17,7 @@
 
 package com.intellectualsites.irongolem.util;
 
+import com.google.common.base.Preconditions;
 import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.jnbt.CompoundTagBuilder;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -41,7 +42,7 @@ public class BlockWrapper {
     private final CompoundTag blockState;
 
     private BlockWrapper(@NotNull final BlockState blockData, @Nullable final CompoundTag blockState) {
-        this.blockData = blockData;
+        this.blockData = Preconditions.checkNotNull(blockData, "Block data may not be null");
         this.blockState = blockState == null ? EMPTY : blockState;
     }
 

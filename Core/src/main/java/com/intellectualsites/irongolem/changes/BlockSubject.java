@@ -35,11 +35,17 @@ public class BlockSubject implements ChangeSubject<BlockState, CompoundTag> {
     private final CompoundTag oldState;
     private final CompoundTag newState;
 
+    private final boolean oldFull;
+    private final boolean newFull;
+
     private BlockSubject(@NotNull final BlockWrapper from, @NotNull final BlockWrapper to) {
         this.from = Preconditions.checkNotNull(from, "From may not be null").getBlockData();
         this.to = Preconditions.checkNotNull(to, "To may not be null").getBlockData();
         this.oldState = from.getBlockState();
         this.newState = to.getBlockState();
+
+        this.oldFull = !this.oldState.getValue().isEmpty();
+        this.newFull = !this.newState.getValue().isEmpty();
     }
 
     /**
@@ -83,19 +89,35 @@ public class BlockSubject implements ChangeSubject<BlockState, CompoundTag> {
     }
 
     @Override public byte[] serializeNewState() {
+        if (this.newState == null || !this.oldFull) {
+            return new byte[0];
+        }
         return NBTUtils.compoundToBytes(this.newState);
     }
 
     @Override public byte[] serializeOldState() {
+        if (this.newState == null || !this.oldFull) {
+            return new byte[0];
+        }
         return NBTUtils.compoundToBytes(this.oldState);
     }
 
     @NotNull public BaseBlock getFromFull() {
-        return this.getFrom().toBaseBlock(this.oldState);
+        if (this.oldFull) {
+            return Preconditions.checkNotNull(this.getFrom().toBaseBlock(this.oldState),
+                "Failed to create base block");
+        } else {
+            return this.getFrom().toBaseBlock();
+        }
     }
 
     @NotNull public BaseBlock getToFull() {
-        return this.getTo().toBaseBlock(this.newState);
+        if (this.newFull) {
+            return Preconditions.checkNotNull(this.getTo().toBaseBlock(this.newState),
+                "Failed to create base block");
+        } else {
+            return this.getTo().toBaseBlock();
+        }
     }
 
 }

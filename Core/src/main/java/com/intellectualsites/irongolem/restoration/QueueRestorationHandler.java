@@ -89,7 +89,6 @@ public class QueueRestorationHandler implements RestorationHandler {
     private final IronGolem ironGolem;
     private final Collection<CuboidRegion> regions;
 
-
     public QueueRestorationHandler(@NotNull final IronGolem plugin, final Class<? extends LocalBlockQueue> queue) {
         this.ironGolem = plugin;
         this.regions = new HashSet<>();
@@ -121,8 +120,7 @@ public class QueueRestorationHandler implements RestorationHandler {
             }
             final BlockSubject blockSubject = (BlockSubject) subject;
             final Location location = change.getLocation();
-            localBlockQueue
-                .setBlock(location.getBlockX(), location.getBlockY(), location.getBlockZ(), blockSubject.getFromFull());
+            localBlockQueue.setBlock(location.getBlockX(), location.getBlockY(), location.getBlockZ(), blockSubject.getFromFull());
         }
         localBlockQueue.enqueue();
 
