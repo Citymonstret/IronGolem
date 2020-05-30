@@ -18,8 +18,10 @@
 package com.intellectualsites.irongolem.util;
 
 import com.intellectualsites.irongolem.changes.BlockSubject;
+import com.intellectualsites.irongolem.changes.ChangeReason;
 import com.intellectualsites.irongolem.changes.ChangeSubject;
 import com.intellectualsites.irongolem.changes.ChangeType;
+import com.intellectualsites.irongolem.changes.RestorationSubject;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,12 +40,15 @@ public class SubjectFactory {
      * @param to   Serialized to state
      * @return The subject, or null if it couldn't be created
      */
-    @Nullable public ChangeSubject<?, ?> getSubject(@NotNull final String type,
+    @Nullable public ChangeSubject<?, ?> getSubject(@NotNull final ChangeReason reason, @NotNull final String type,
         @NotNull final String from, @NotNull final String to, @NotNull final byte[] oldState, @NotNull final byte[] newState) {
         final ChangeType changeType = ChangeType.valueOf(type);
-        if (changeType == ChangeType.BLOCK) {
-            return BlockSubject.of(new BlockWrapper(Bukkit.createBlockData(from), oldState),
-                new BlockWrapper(Bukkit.createBlockData(to), newState));
+        if (reason == ChangeReason.RESTORATION) {
+            return RestorationSubject.of(changeType, Integer.parseInt(to));
+        } else {
+            if (changeType == ChangeType.BLOCK) {
+                return BlockSubject.of(new BlockWrapper(Bukkit.createBlockData(from), oldState), new BlockWrapper(Bukkit.createBlockData(to), newState));
+            }
         }
         return null;
     }

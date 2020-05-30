@@ -4,5 +4,9 @@
   "command.not-permitted": "<red>You are not permitted to use that command.</red>",
   "command.not-found": "<red>There is no such command.</red>",
   "command.missing.range": "<red>You need to specify a range.</red>",
-  "query.failure": "<red>Failed to query the changes. Error: <message></red>"
+  "query.failure": "<red>Failed to query the changes. Error: <message></red>",
+  "restore.region-locked": "<red>Error: There is already a restoration taking place in that region.</red>",
+  "restore.started": "<green>The restoration has started. A total of <changes> change(s) will be restored in a region of <blocks> block(s).",
+  "restore.empty": "<red>There are no changes to restore.<red>",
+  "restore.done": "<green>The restoration has been completed successfully."
 }

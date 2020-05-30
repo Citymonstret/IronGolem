@@ -62,17 +62,27 @@ public class RestoreCommand extends SubCommand {
             .distinctValues()
             .queryChanges()
             .whenComplete(((changes, throwable) -> {
+                changes = changes.optimize();
+
+                if (changes.getSize() == 0) {
+                    player.sendMessage(TranslatableMessage.of("restore.empty"));
+                    return;
+                }
+
                 if (throwable != null) {
                     throwable.printStackTrace();
                     player.sendMessage(TranslatableMessage.of("query.failure"), "message", throwable.getMessage());
-                } else {
-                    player.getPlayer().sendMessage("yay, starting restoration");
-                    try {
-                        IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes.optimize(),
-                            PlayerSource.of(player), () -> player.getPlayer().sendMessage("am done"));
-                    } catch (final RegionLockedException e) {
-                        e.printStackTrace();
-                    }
+                    return;
+                }
+
+                try {
+                    IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes,
+                        PlayerSource.of(player), () -> player.sendMessage(TranslatableMessage.of("restore.done")));
+                    player.sendMessage(TranslatableMessage.of("restore.started"), "changes",
+                        Integer.toString(changes.getSize()), "blocks",
+                        Long.toString(changes.getRegion().getVolume()));
+                } catch (final RegionLockedException e) {
+                    player.sendMessage(TranslatableMessage.of("restore.region-locked"));
                 }
             }));
     }

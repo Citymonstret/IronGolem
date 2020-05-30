@@ -31,14 +31,17 @@ public class Change {
     private final ChangeSubject<?, ?> subject;
     private final ChangeReason reason;
     private final long timestamp;
+    private final int id;
 
     private Change(@NotNull final ChangeSource source, @NotNull final Location location,
-        @NotNull final ChangeSubject<?, ?> subject, @NotNull final ChangeReason reason, final long timestamp) {
+        @NotNull final ChangeSubject<?, ?> subject, @NotNull final ChangeReason reason,
+        final long timestamp, final int id) {
         this.source = source;
         this.location = location;
         this.subject = subject;
         this.reason = reason;
         this.timestamp = timestamp;
+        this.id = id;
     }
 
     public static ChangeBuilder newBuilder() {
@@ -90,6 +93,17 @@ public class Change {
         return this.timestamp;
     }
 
+    /**
+     * Get the change ID. This will be -1
+     * if the change was created via code
+     * and was not loaded from the database
+     *
+     * @return Chage ID
+     */
+    public int getId() {
+        return this.id;
+    }
+
     public static final class ChangeBuilder {
 
         private ChangeSource source;
@@ -97,6 +111,12 @@ public class Change {
         private ChangeSubject<?, ?> subject;
         private ChangeReason reason;
         private long time = System.currentTimeMillis();
+        private int id = -1;
+
+        @NotNull public ChangeBuilder withId(@NotNull final int id) {
+            this.id = id;
+            return this;
+        }
 
         @NotNull public ChangeBuilder withSource(@NotNull final ChangeSource source) {
             this.source = Preconditions.checkNotNull(source, "Source cannot be null");
@@ -128,7 +148,7 @@ public class Change {
             Preconditions.checkNotNull(location, "Location needs to be set");
             Preconditions.checkNotNull(location, "Subject may not be null");
             Preconditions.checkNotNull(reason, "Reason may not be null");
-            return new Change(this.source, this.location, this.subject, this.reason, this.time);
+            return new Change(this.source, this.location, this.subject, this.reason, this.time, this.id);
         }
 
     }

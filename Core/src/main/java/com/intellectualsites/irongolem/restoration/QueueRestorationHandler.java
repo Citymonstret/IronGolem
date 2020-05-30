@@ -20,7 +20,6 @@ package com.intellectualsites.irongolem.restoration;
 import com.intellectualsites.irongolem.IronGolem;
 import com.intellectualsites.irongolem.changes.BlockSubject;
 import com.intellectualsites.irongolem.changes.Change;
-import com.intellectualsites.irongolem.changes.ChangeReason;
 import com.intellectualsites.irongolem.changes.ChangeSource;
 import com.intellectualsites.irongolem.changes.ChangeSubject;
 import com.intellectualsites.irongolem.changes.ChangeType;
@@ -29,7 +28,6 @@ import com.intellectualsites.irongolem.queue.BukkitTaskManager;
 import com.intellectualsites.irongolem.queue.GlobalBlockQueue;
 import com.intellectualsites.irongolem.queue.LocalBlockQueue;
 import com.intellectualsites.irongolem.queue.QueueProvider;
-import com.intellectualsites.irongolem.queue.RunnableVal;
 import com.intellectualsites.irongolem.queue.TaskManager;
 import com.intellectualsites.irongolem.util.BlockWrapper;
 import com.intellectualsites.irongolem.util.CuboidRegion;
@@ -38,8 +36,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Restoration handler based on the PlotSquared queue system
@@ -117,26 +113,7 @@ public class QueueRestorationHandler implements RestorationHandler {
         if (!this.createRegionLock(changes.getRegion())) {
             throw new RegionLockedException(changes.getRegion());
         }
-        // Calculate the changes
-        final RunnableVal<List<Change>> changesTask = new RunnableVal<List<Change>>(new LinkedList<>()) {
-            @Override public void run(final List<Change> value) {
-                for (final Change change : changes.getChanges()) {
-                    final ChangeSubject<?, ?> subject = change.getSubject();
-                    if (subject.getType() != ChangeType.BLOCK) {
-                        continue; // TODO: Fix this
-                    }
-                    final BlockSubject blockSubject = (BlockSubject) subject;
-                    final Change newChange = new Change.ChangeBuilder()
-                        .atLocation(change.getLocation())
-                        .withSource(source)
-                        .withReason(ChangeReason.RESTORATION)
-                        .withSubject(BlockSubject.of(change.getLocation().getBlock(), BlockWrapper.of(blockSubject.getFrom()))).build();
-                    value.add(newChange);
-                }
-            }
-        };
-        // We need to log the restoration changes
-        this.ironGolem.getChangeLogger().logChanges(TaskManager.IMP.sync(changesTask));
+
         final LocalBlockQueue localBlockQueue = GlobalBlockQueue.IMP.getNewQueue(changes.getWorld().getName(), false);
         for (final Change change : changes.getChanges()) {
             final ChangeSubject<?, ?> subject = change.getSubject();
@@ -152,6 +129,8 @@ public class QueueRestorationHandler implements RestorationHandler {
         localBlockQueue.enqueue();
 
         final Runnable overriddenCompletionTask = () -> {
+            // We need to log the restoration changes
+            this.ironGolem.getChangeLogger().logChanges(changes.getRestorationChangeSet(source));
             this.freeRegion(changes.getRegion());
             completionTask.run();
         };

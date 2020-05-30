@@ -95,7 +95,7 @@ public class CuboidRegion {
      *
      * @return Number of blocks
      */
-    public long getSize() {
+    public long getVolume() {
         return (long) this.getWidth() * (long) this.getHeight() * (long) this.getDepth();
     }
 

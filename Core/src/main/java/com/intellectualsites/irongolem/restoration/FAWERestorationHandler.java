@@ -21,21 +21,16 @@ import com.boydti.fawe.util.EditSessionBuilder;
 import com.intellectualsites.irongolem.IronGolem;
 import com.intellectualsites.irongolem.changes.BlockSubject;
 import com.intellectualsites.irongolem.changes.Change;
-import com.intellectualsites.irongolem.changes.ChangeReason;
 import com.intellectualsites.irongolem.changes.ChangeSource;
 import com.intellectualsites.irongolem.changes.ChangeSubject;
 import com.intellectualsites.irongolem.changes.ChangeType;
 import com.intellectualsites.irongolem.changes.Changes;
-import com.intellectualsites.irongolem.util.BlockWrapper;
 import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.entity.BaseEntity;
 import com.sk89q.worldedit.entity.Entity;
 import com.sk89q.worldedit.extent.Extent;
-import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operation;
-import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
@@ -58,7 +53,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -85,24 +79,38 @@ public class FAWERestorationHandler implements RestorationHandler {
             throw new RegionLockedException(changes.getRegion());
         }
         Bukkit.getScheduler().runTaskAsynchronously(ironGolem, () -> {
+            final Collection<Change> restorationChanges = changes.getRestorationChangeSet(source);
             try {
                 final com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(changes.getWorld());
                 final EditSession session =
                     new EditSessionBuilder(weWorld).checkMemory(false).fastmode(true).limitUnlimited().changeSetNull().autoQueue(false).build();
-                final CuboidRegion region = convertRegion(changes.getRegion());
+
+                for (final Change change : changes.getChanges()) {
+                    final BlockVector3 location = BukkitAdapter.asBlockVector(change.getLocation());
+                    final ChangeSubject<?, ?> subject = change.getSubject();
+                    if (subject.getType() != ChangeType.BLOCK) {
+                        continue;
+                    }
+                    final BlockSubject blockSubject = (BlockSubject) subject;
+                    final BaseBlock block = BukkitAdapter.adapt(blockSubject.getFrom())
+                        .toBaseBlock(); /* TODO: Support NBT */
+                    session.setBlock(location, block);
+                }
+
+                /*final CuboidRegion region = convertRegion(changes.getRegion());
                 final ChangeExtent changeExtent = new ChangeExtent(source, weWorld, region, changes.getChanges());
                 final ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(changeExtent, region, session, region.getMinimumPoint());
-                forwardExtentCopy.setCopyingEntities(false); /* TODO: Support entities */
+                forwardExtentCopy.setCopyingEntities(false);
                 forwardExtentCopy.setCopyingBiomes(false);
                 forwardExtentCopy.setRemovingEntities(false);
                 try {
                     Operations.complete(forwardExtentCopy);
                 } catch (final WorldEditException e) {
                     LOGGER.error("Failed to restore region", e);
-                }
+                }*/
                 session.flushSession();
                 // Log the restoration
-                ironGolem.getChangeLogger().logChanges(changeExtent.restorationChanges);
+                ironGolem.getChangeLogger().logChanges(restorationChanges);
                 completionTask.run();
             } catch (final Exception e) {
                 LOGGER.error("Failed to restore region", e);
@@ -145,8 +153,6 @@ public class FAWERestorationHandler implements RestorationHandler {
         private final Map<BlockVector3, BaseBlock> changes = new HashMap<>();
         private final CuboidRegion region;
         private final World world;
-
-        private final Collection<Change> restorationChanges = new LinkedList<>();
         private final ChangeSource source;
 
         private ChangeExtent(final ChangeSource source, final World world,
@@ -194,14 +200,6 @@ public class FAWERestorationHandler implements RestorationHandler {
         @Override public BaseBlock getFullBlock(BlockVector3 position) {
             final BaseBlock block = this.changes.get(position);
             if (block != null) {
-                // This is a super hacky way to log all changes
-                // without having to deal with the chunk loading mess
-                final BaseBlock existingBlock = world.getFullBlock(position);
-                this.restorationChanges.add(Change.newBuilder().withReason(ChangeReason.RESTORATION)
-                    .atLocation(BukkitAdapter.adapt(BukkitAdapter.adapt(world), position))
-                    .atTime(System.currentTimeMillis()).withSource(source).withSubject(BlockSubject
-                        .of(BlockWrapper.of(BukkitAdapter.adapt(existingBlock)),
-                            BlockWrapper.of(BukkitAdapter.adapt(block)))).build());
                 return block;
             }
             return world.getFullBlock(position);

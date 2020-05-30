@@ -26,6 +26,8 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A collection of changes, often as a result of a {@link ChangeQuery}
@@ -92,6 +94,30 @@ public class Changes {
     }
 
     /**
+     * Get a list of restoration changes for this
+     * change set
+     *
+     * @param source Change source
+     * @return Restoration changes
+     */
+    @NotNull public Collection<Change> getRestorationChangeSet(@NotNull final ChangeSource source) {
+        if (!this.isDistinct()) {
+            throw new IllegalArgumentException("Can only calculate restoration changes for distinct change sets");
+        }
+        final Set<Change> restorationChanges = new HashSet<>(this.getSize());
+        for (final Change change : this.getChanges()) {
+            restorationChanges.add(Change.newBuilder()
+                .atTime(System.currentTimeMillis())
+                .withSource(source)
+                .atLocation(change.getLocation())
+                .withReason(ChangeReason.RESTORATION)
+                .withSubject(RestorationSubject.of(change.getSubject().getType(), change.getId()))
+                .build());
+        }
+        return restorationChanges;
+    }
+
+    /**
      * Check whether or not this change
      * set has distinct values at every location
      *
@@ -132,7 +158,7 @@ public class Changes {
             maxZ = Math.max(maxZ, vector.getBlockZ());
         }
         final CuboidRegion region = CuboidRegion.of(new Vector(minX, minY, minZ),
-            new Vector(minX, minY, minZ));
+            new Vector(maxX, maxY, maxZ));
         return new Changes(region, this.world, this.changes.values());
     }
 

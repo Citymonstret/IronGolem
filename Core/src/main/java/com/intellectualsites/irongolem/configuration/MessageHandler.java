@@ -82,7 +82,7 @@ public class MessageHandler {
         Preconditions.checkNotNull(key, "Key cannot be null");
         final String value = this.messages.get(key);
         if (value == null) {
-            throw new IllegalArgumentException("There is no message with that key");
+            throw new IllegalArgumentException("There is no message with that key: " + key);
         }
         return value;
     }

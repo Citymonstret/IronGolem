@@ -170,19 +170,21 @@ public class SQLiteLogger extends ScheduledQueuingChangeLogger {
                                     LOGGER.warn("Skipping change because of invalid source: {}", source);
                                     continue;
                                 }
+                                final ChangeReason reason = ChangeReason.valueOf(resultSet.getString("reason"));
                                 final byte[] oldState = resultSet.getBytes("old_state");
                                 final byte[] newState = resultSet.getBytes("new_state");
-                                final ChangeSubject<?, ?> subject = this.subjectFactory.getSubject(resultSet.getString("type"),
+                                final ChangeSubject<?, ?> subject = this.subjectFactory.getSubject(reason, resultSet.getString("type"),
                                     resultSet.getString("from"), resultSet.getString("to"), oldState, newState);
                                 if (subject == null) {
                                     LOGGER.warn("Skipping change because of invalid subject");
                                     continue;
                                 }
                                 final Change change = Change.newBuilder()
+                                    .withId(resultSet.getInt("event_id"))
                                     .atLocation(location)
                                     .atTime(resultSet.getLong("timestamp"))
                                     .withSource(source)
-                                    .withReason(ChangeReason.valueOf(resultSet.getString("reason")))
+                                    .withReason(reason)
                                     .withSubject(subject)
                                     .build();
                                 changes.add(change);
