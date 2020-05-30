@@ -3,7 +3,7 @@ version: ${project.version}
 main: com.intellectualsites.irongolem.IronGolem
 api-version: 1.13
 prefix: IG
-softdepend: [WorldEdit]
+depend: [WorldEdit]
 authors: [Citymonstret]
 description: Minecraft block logging plugin
 website: https://intellectualsites.com

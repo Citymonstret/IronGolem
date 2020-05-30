@@ -47,7 +47,8 @@ public class SubjectFactory {
             return RestorationSubject.of(changeType, Integer.parseInt(to));
         } else {
             if (changeType == ChangeType.BLOCK) {
-                return BlockSubject.of(new BlockWrapper(Bukkit.createBlockData(from), oldState), new BlockWrapper(Bukkit.createBlockData(to), newState));
+                return BlockSubject.of(BlockWrapper.of(Bukkit.createBlockData(from), NBTUtils.bytesToCompound(oldState)),
+                    BlockWrapper.of(Bukkit.createBlockData(to), NBTUtils.bytesToCompound(newState)));
             }
         }
         return null;

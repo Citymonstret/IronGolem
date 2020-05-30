@@ -19,20 +19,21 @@ package com.intellectualsites.irongolem.changes;
 
 import com.google.common.base.Preconditions;
 import com.intellectualsites.irongolem.util.BlockWrapper;
-import com.intellectualsites.irongolem.util.BlockWrapperFactory;
-import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
+import com.intellectualsites.irongolem.util.NBTUtils;
+import com.sk89q.jnbt.CompoundTag;
+import com.sk89q.worldedit.world.block.BaseBlock;
+import com.sk89q.worldedit.world.block.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link ChangeSubject} involving block data
  */
-public class BlockSubject implements ChangeSubject<BlockData, byte[]> {
+public class BlockSubject implements ChangeSubject<BlockState, CompoundTag> {
 
-    private final BlockData from;
-    private final BlockData to;
-    private final byte[] oldState;
-    private final byte[] newState;
+    private final BlockState from;
+    private final BlockState to;
+    private final CompoundTag oldState;
+    private final CompoundTag newState;
 
     private BlockSubject(@NotNull final BlockWrapper from, @NotNull final BlockWrapper to) {
         this.from = Preconditions.checkNotNull(from, "From may not be null").getBlockData();
@@ -53,21 +54,6 @@ public class BlockSubject implements ChangeSubject<BlockData, byte[]> {
         return new BlockSubject(from, to);
     }
 
-    @NotNull public static BlockSubject of(@NotNull final Block from,
-        @NotNull final Block to) {
-        return of(BlockWrapperFactory.getFactory().createWrapper(from), BlockWrapperFactory.getFactory().createWrapper(to));
-    }
-
-    @NotNull public static BlockSubject of(@NotNull final Block from,
-        @NotNull final BlockWrapper to) {
-        return of(BlockWrapperFactory.getFactory().createWrapper(from), to);
-    }
-
-    @NotNull public static BlockSubject of(@NotNull final BlockWrapper from,
-        @NotNull final Block to) {
-        return of(from, BlockWrapperFactory.getFactory().createWrapper(to));
-    }
-
     @Override public String serializeFrom() {
         return this.from.getAsString();
     }
@@ -80,28 +66,36 @@ public class BlockSubject implements ChangeSubject<BlockData, byte[]> {
         return ChangeType.BLOCK;
     }
 
-    @Override public BlockData getFrom() {
+    @Override public BlockState getFrom() {
         return this.from;
     }
 
-    @Override public BlockData getTo() {
+    @Override public BlockState getTo() {
         return this.to;
     }
 
-    @Override public byte[] getOldState() {
+    @Override public CompoundTag getOldState() {
         return this.oldState;
     }
 
-    @Override public byte[] getNewState() {
+    @Override public CompoundTag getNewState() {
         return this.newState;
     }
 
     @Override public byte[] serializeNewState() {
-        return this.newState;
+        return NBTUtils.compoundToBytes(this.newState);
     }
 
     @Override public byte[] serializeOldState() {
-        return this.oldState;
+        return NBTUtils.compoundToBytes(this.oldState);
+    }
+
+    @NotNull public BaseBlock getFromFull() {
+        return this.getFrom().toBaseBlock(this.oldState);
+    }
+
+    @NotNull public BaseBlock getToFull() {
+        return this.getTo().toBaseBlock(this.newState);
     }
 
 }

@@ -29,7 +29,6 @@ import com.intellectualsites.irongolem.restoration.FAWERestorationHandler;
 import com.intellectualsites.irongolem.restoration.QueueRestorationHandler;
 import com.intellectualsites.irongolem.restoration.RestorationHandler;
 import com.intellectualsites.irongolem.storage.SQLiteLogger;
-import com.intellectualsites.irongolem.util.BlockWrapperFactory;
 import com.intellectualsites.irongolem.util.UsernameMapper;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
@@ -47,7 +46,6 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
     private PlayerManager playerManager;
     private ChangeLogger changeLogger;
     private RestorationHandler restorationHandler;
-    private BlockWrapperFactory blockWrapperFactory;
     private UsernameMapper usernameMapper;
     private MessageHandler messageHandler;
 
@@ -61,15 +59,6 @@ public final class IronGolem extends JavaPlugin implements IronGolemAPI {
             return;
         }
         this.messageHandler = new MessageHandler(this);
-        try {
-            final Class<?> clazz = Class
-                .forName("com.intellectualsites.irongolem." + version + ".BlockWrapperFactoryImpl");
-            this.blockWrapperFactory = (BlockWrapperFactory) clazz.newInstance();
-        } catch (final Exception e) {
-            LOGGER.error("Failed to create block wrapper factory", e);
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
         Class<? extends LocalBlockQueue> clazz;
         try {
             clazz = (Class<? extends LocalBlockQueue>) Class

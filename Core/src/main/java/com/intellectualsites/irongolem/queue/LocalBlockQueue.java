@@ -25,7 +25,7 @@
  */
 package com.intellectualsites.irongolem.queue;
 
-import com.intellectualsites.irongolem.util.BlockWrapper;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class LocalBlockQueue {
@@ -47,7 +47,7 @@ public abstract class LocalBlockQueue {
      * @param data the data to set the block to
      */
     public abstract void setBlock(final int x, final int y, final int z,
-        @NotNull final BlockWrapper data);
+        @NotNull final BaseBlock data);
 
     public abstract String getWorld();
 

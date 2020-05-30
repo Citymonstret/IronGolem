@@ -44,9 +44,11 @@ public class BlockListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(final BlockBreakEvent event) {
-        final Change change = Change.newBuilder().atLocation(event.getBlock().getLocation())
-            .withSource(PlayerSource.of(event.getPlayer())).withSubject(BlockSubject.of(event.getBlock(),
-                BlockWrapper.AIR)).withReason(ChangeReason.BLOCK_BREAK).build();
+        final Change change = Change.newBuilder()
+            .atLocation(event.getBlock().getLocation())
+            .withSource(PlayerSource.of(event.getPlayer()))
+            .withSubject(BlockSubject.of(BlockWrapper.of(event.getBlock()), BlockWrapper.AIR))
+            .withReason(ChangeReason.BLOCK_BREAK).build();
         logger.logChange(change);
     }
 
@@ -54,8 +56,7 @@ public class BlockListener implements Listener {
     public void onBlockPlace(final BlockPlaceEvent event) {
         final Change change = Change.newBuilder().atLocation(event.getBlock().getLocation())
             .withSource(PlayerSource.of(event.getPlayer()))
-            .withSubject(BlockSubject.of(BlockWrapper.of(event.getBlockReplacedState().getBlockData()),
-                event.getBlockPlaced()))
+            .withSubject(BlockSubject.of(BlockWrapper.of(event.getBlockReplacedState().getBlockData()), BlockWrapper.of(event.getBlockPlaced())))
             .withReason(ChangeReason.BLOCK_PLACE).build();
         logger.logChange(change);
     }

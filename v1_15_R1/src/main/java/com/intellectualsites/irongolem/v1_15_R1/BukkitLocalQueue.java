@@ -26,16 +26,15 @@
 
 package com.intellectualsites.irongolem.v1_15_R1;
 
-import com.google.common.io.ByteSource;
 import com.intellectualsites.irongolem.queue.BasicLocalBlockQueue;
 import com.intellectualsites.irongolem.restoration.QueueRestorationHandler;
-import com.intellectualsites.irongolem.util.BlockWrapper;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import io.papermc.lib.PaperLib;
 import net.minecraft.server.v1_15_R1.BlockPosition;
 import net.minecraft.server.v1_15_R1.EnumDirection;
-import net.minecraft.server.v1_15_R1.NBTCompressedStreamTools;
-import net.minecraft.server.v1_15_R1.NBTTagCompound;
-import net.minecraft.server.v1_15_R1.TileEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
@@ -46,7 +45,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
 import java.util.function.Consumer;
 
 public class BukkitLocalQueue extends BasicLocalBlockQueue {
@@ -74,17 +72,19 @@ public class BukkitLocalQueue extends BasicLocalBlockQueue {
 
     public void setBaseBlocks(LocalChunk localChunk) {
         World worldObj = Bukkit.getWorld(getWorld());
+        BukkitWorld bukkitWorld = (BukkitWorld) BukkitAdapter.adapt(worldObj);
+
         if (worldObj == null) {
             throw new NullPointerException("World cannot be null.");
         }
         final Consumer<Chunk> chunkConsumer = chunk -> {
             final net.minecraft.server.v1_15_R1.Chunk nmsChunk = ((CraftChunk) chunk).getHandle();
             for (int layer = 0; layer < localChunk.baseblocks.length; layer++) {
-                BlockWrapper[] blocksLayer = localChunk.baseblocks[layer];
+                BaseBlock[] blocksLayer = localChunk.baseblocks[layer];
                 if (blocksLayer != null) {
                     for (int j = 0; j < blocksLayer.length; j++) {
                         if (blocksLayer[j] != null) {
-                            BlockWrapper block = blocksLayer[j];
+                            BaseBlock block = blocksLayer[j];
                             int x = QueueRestorationHandler.x_loc[layer][j];
                             int y = QueueRestorationHandler.y_loc[layer][j];
                             int z = QueueRestorationHandler.z_loc[layer][j];
@@ -99,30 +99,7 @@ public class BukkitLocalQueue extends BasicLocalBlockQueue {
                                 ((InventoryHolder) existingBlockState).getInventory().clear();
                             }
 
-                            // final IBlockData oldData = nmsChunk.getType(position);
-
-                            existingBlock.setBlockData(block.getBlockData(), false);
-                            if (block.getBlockState().length > 0) {
-                                try {
-                                    final InputStream stream =
-                                        ByteSource.wrap(block.getBlockState()).openStream();
-                                    final NBTTagCompound nbtTagCompound =
-                                        NBTCompressedStreamTools.a(stream);
-                                    if (nbtTagCompound != null) {
-                                        nbtTagCompound.setInt("x", x);
-                                        nbtTagCompound.setInt("y", y);
-                                        nbtTagCompound.setInt("z", z);
-                                        final TileEntity tileEntity =
-                                            nmsChunk.getWorld().getTileEntity(position);
-                                        if (tileEntity != null) {
-                                            tileEntity.load(nbtTagCompound);
-                                        }
-                                    }
-                                } catch (final Exception e) {
-                                    LOGGER.error("Failed to update tile entity state", e);
-                                }
-                            }
-
+                            bukkitWorld.setBlock(BlockVector3.at(x, y, z), block, true);
                             /*
                             // We use a hacky workaround here to not have to deal with
                             // tile entities. Basically, if we have any NBT data to set

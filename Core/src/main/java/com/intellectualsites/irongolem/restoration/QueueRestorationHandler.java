@@ -29,7 +29,6 @@ import com.intellectualsites.irongolem.queue.GlobalBlockQueue;
 import com.intellectualsites.irongolem.queue.LocalBlockQueue;
 import com.intellectualsites.irongolem.queue.QueueProvider;
 import com.intellectualsites.irongolem.queue.TaskManager;
-import com.intellectualsites.irongolem.util.BlockWrapper;
 import com.intellectualsites.irongolem.util.CuboidRegion;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
@@ -123,8 +122,7 @@ public class QueueRestorationHandler implements RestorationHandler {
             final BlockSubject blockSubject = (BlockSubject) subject;
             final Location location = change.getLocation();
             localBlockQueue
-                .setBlock(location.getBlockX(), location.getBlockY(), location.getBlockZ(),
-                    new BlockWrapper(blockSubject.getFrom(), blockSubject.serializeOldState()));
+                .setBlock(location.getBlockX(), location.getBlockY(), location.getBlockZ(), blockSubject.getFromFull());
         }
         localBlockQueue.enqueue();
 

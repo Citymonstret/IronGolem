@@ -51,10 +51,8 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 public class FAWERestorationHandler implements RestorationHandler {
 
@@ -81,9 +79,13 @@ public class FAWERestorationHandler implements RestorationHandler {
         Bukkit.getScheduler().runTaskAsynchronously(ironGolem, () -> {
             final Collection<Change> restorationChanges = changes.getRestorationChangeSet(source);
             try {
-                final com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(changes.getWorld());
+                final com.sk89q.worldedit.world.World weWorld =
+                    BukkitAdapter.adapt(changes.getWorld());
                 final EditSession session =
-                    new EditSessionBuilder(weWorld).checkMemory(false).fastmode(true).limitUnlimited().changeSetNull().autoQueue(false).build();
+                    new EditSessionBuilder(weWorld).checkMemory(false).fastmode(true)
+                        .limitUnlimited().changeSetNull().autoQueue(false).build();
+
+                final long start = System.currentTimeMillis();
 
                 for (final Change change : changes.getChanges()) {
                     final BlockVector3 location = BukkitAdapter.asBlockVector(change.getLocation());
@@ -92,26 +94,38 @@ public class FAWERestorationHandler implements RestorationHandler {
                         continue;
                     }
                     final BlockSubject blockSubject = (BlockSubject) subject;
-                    final BaseBlock block = BukkitAdapter.adapt(blockSubject.getFrom())
-                        .toBaseBlock(); /* TODO: Support NBT */
+                    final BaseBlock block = blockSubject.getFromFull();
                     session.setBlock(location, block);
                 }
 
-                /*final CuboidRegion region = convertRegion(changes.getRegion());
-                final ChangeExtent changeExtent = new ChangeExtent(source, weWorld, region, changes.getChanges());
+                /*
+                final long start = System.currentTimeMillis();
+                final CuboidRegion region = convertRegion(changes.getRegion());
+                final long start1_1 = System.currentTimeMillis();
+                final ChangeExtent changeExtent = new ChangeExtent(weWorld, region, changes.getChanges());
+                final long start1_2 = System.currentTimeMillis();
                 final ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(changeExtent, region, session, region.getMinimumPoint());
                 forwardExtentCopy.setCopyingEntities(false);
                 forwardExtentCopy.setCopyingBiomes(false);
                 forwardExtentCopy.setRemovingEntities(false);
+                // Copy the blocks over to the edit session
                 try {
                     Operations.complete(forwardExtentCopy);
                 } catch (final WorldEditException e) {
                     LOGGER.error("Failed to restore region", e);
-                }*/
+                }
+                final long start2 = System.currentTimeMillis();
+                 */
+                // Persist the changes
                 session.flushSession();
+                final long end = System.currentTimeMillis();
+
+                Bukkit.broadcastMessage(String.format("Extent copy took %dms", end - start));
+
+                // Inform the client
+                completionTask.run();
                 // Log the restoration
                 ironGolem.getChangeLogger().logChanges(restorationChanges);
-                completionTask.run();
             } catch (final Exception e) {
                 LOGGER.error("Failed to restore region", e);
             } finally {
@@ -120,7 +134,8 @@ public class FAWERestorationHandler implements RestorationHandler {
         });
     }
 
-    @Override public boolean createRegionLock(@NotNull final com.intellectualsites.irongolem.util.CuboidRegion region) {
+    @Override public boolean createRegionLock(
+        @NotNull final com.intellectualsites.irongolem.util.CuboidRegion region) {
         synchronized (this.regionLock) {
             for (final com.intellectualsites.irongolem.util.CuboidRegion lockingRegion : this.regions) {
                 if (lockingRegion.intersects(region)) {
@@ -132,8 +147,8 @@ public class FAWERestorationHandler implements RestorationHandler {
         return true;
     }
 
-    @Override
-    public void freeRegion(@NotNull final com.intellectualsites.irongolem.util.CuboidRegion region) {
+    @Override public void freeRegion(
+        @NotNull final com.intellectualsites.irongolem.util.CuboidRegion region) {
         synchronized (this.regionLock) {
             this.regions.remove(region);
         }
@@ -150,16 +165,17 @@ public class FAWERestorationHandler implements RestorationHandler {
 
     private static final class ChangeExtent implements Extent {
 
-        private final Map<BlockVector3, BaseBlock> changes = new HashMap<>();
         private final CuboidRegion region;
         private final World world;
-        private final ChangeSource source;
+        private final BaseBlock[][][] blocks;
 
-        private ChangeExtent(final ChangeSource source, final World world,
-            final CuboidRegion region, final Collection<Change> changes) {
+        private ChangeExtent(final World world, final CuboidRegion region,
+            final Collection<Change> changes) {
             this.region = region;
-            this.source = source;
             this.world = world;
+
+            this.blocks = new BaseBlock[region.getWidth()][region.getHeight()][region.getLength()];
+
             for (final Change change : changes) {
                 final BlockVector3 location = BukkitAdapter.asBlockVector(change.getLocation());
                 final ChangeSubject<?, ?> subject = change.getSubject();
@@ -167,9 +183,10 @@ public class FAWERestorationHandler implements RestorationHandler {
                     continue;
                 }
                 final BlockSubject blockSubject = (BlockSubject) subject;
-                final BaseBlock block = BukkitAdapter.adapt(blockSubject.getFrom())
-                    .toBaseBlock(); /* TODO: Support NBT */
-                this.changes.put(location, block);
+                final BaseBlock block = blockSubject.getFromFull();
+                this.blocks[location.getBlockX() - region.getMinimumPoint().getBlockX()][
+                    location.getBlockY() - region.getMinimumPoint().getBlockY()][
+                    location.getBlockZ() - region.getMinimumPoint().getBlockZ()] = block;
             }
         }
 
@@ -197,12 +214,15 @@ public class FAWERestorationHandler implements RestorationHandler {
             return this.getFullBlock(position).toImmutableState();
         }
 
-        @Override public BaseBlock getFullBlock(BlockVector3 position) {
-            final BaseBlock block = this.changes.get(position);
+        @Override public BaseBlock getFullBlock(BlockVector3 location) {
+            final BaseBlock block =
+                this.blocks[location.getBlockX() - region.getMinimumPoint().getBlockX()][
+                    location.getBlockY() - region.getMinimumPoint().getBlockY()][
+                    location.getBlockZ() - region.getMinimumPoint().getBlockZ()];
             if (block != null) {
                 return block;
             }
-            return world.getFullBlock(position);
+            return world.getFullBlock(location);
         }
 
         @Override public BiomeType getBiome(BlockVector2 position) {

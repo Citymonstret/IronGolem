@@ -26,8 +26,8 @@
 package com.intellectualsites.irongolem.queue;
 
 import com.intellectualsites.irongolem.restoration.QueueRestorationHandler;
-import com.intellectualsites.irongolem.util.BlockWrapper;
 import com.intellectualsites.irongolem.util.MathUtils;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,7 +96,7 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
         this.modified = modified;
     }
 
-    @Override public void setBlock(final int x, final int y, final int z, @NotNull final BlockWrapper data) {
+    @Override public void setBlock(final int x, final int y, final int z, @NotNull final BaseBlock data) {
         if ((y > 255) || (y < 0)) {
             return;
         }
@@ -127,7 +127,7 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
         public final int z;
         public final int x;
 
-        public BlockWrapper[][] baseblocks;
+        public BaseBlock[][] baseblocks;
 
         public LocalChunk(BasicLocalBlockQueue parent, int x, int z) {
             this.parent = parent;
@@ -143,7 +143,7 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
             return z;
         }
 
-        public abstract void setBlock(final int x, final int y, final int z, final BlockWrapper block);
+        public abstract void setBlock(final int x, final int y, final int z, final BaseBlock block);
 
         public long longHash() {
             return MathUtils.pairInt(x, z);
@@ -159,19 +159,19 @@ public abstract class BasicLocalBlockQueue extends LocalBlockQueue {
 
         public BasicLocalChunk(BasicLocalBlockQueue parent, int x, int z) {
             super(parent, x, z);
-            baseblocks = new BlockWrapper[16][];
+            baseblocks = new BaseBlock[16][];
         }
 
-        @Override public void setBlock(int x, int y, int z, BlockWrapper block) {
+        @Override public void setBlock(int x, int y, int z, BaseBlock block) {
             this.setInternal(x, y, z, block);
         }
 
-        private void setInternal(final int x, final int y, final int z, final BlockWrapper baseBlock) {
+        private void setInternal(final int x, final int y, final int z, final BaseBlock baseBlock) {
             final int i = QueueRestorationHandler.CACHE_I[y][x][z];
             final int j = QueueRestorationHandler.CACHE_J[y][x][z];
-            BlockWrapper[] array = baseblocks[i];
+            BaseBlock[] array = baseblocks[i];
             if (array == null) {
-                array = (baseblocks[i] = new BlockWrapper[4096]);
+                array = (baseblocks[i] = new BaseBlock[4096]);
             }
             array[j] = baseBlock;
         }

@@ -17,9 +17,16 @@
 
 package com.intellectualsites.irongolem.util;
 
-import org.bukkit.Material;
+import com.sk89q.jnbt.CompoundTag;
+import com.sk89q.jnbt.CompoundTagBuilder;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.world.block.BaseBlock;
+import com.sk89q.worldedit.world.block.BlockState;
+import com.sk89q.worldedit.world.block.BlockTypes;
+import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Wrapper for blocks that contain both their data
@@ -27,26 +34,47 @@ import org.jetbrains.annotations.NotNull;
  */
 public class BlockWrapper {
 
-    public static final BlockWrapper AIR = of(Material.AIR.createBlockData());
+    public static final BlockWrapper AIR = of(BlockTypes.AIR.getDefaultState());
+    public static final CompoundTag EMPTY = CompoundTagBuilder.create().build();
 
-    private final BlockData blockData;
-    private final byte[] blockState;
+    private final BlockState blockData;
+    private final CompoundTag blockState;
 
-    public BlockWrapper(@NotNull final BlockData blockData, @NotNull final byte[] blockState) {
+    private BlockWrapper(@NotNull final BlockState blockData, @Nullable final CompoundTag blockState) {
         this.blockData = blockData;
-        this.blockState = blockState;
+        this.blockState = blockState == null ? EMPTY : blockState;
     }
 
-    @NotNull public BlockData getBlockData() {
+    @NotNull public BlockState getBlockData() {
         return this.blockData;
     }
 
-    @NotNull public byte[] getBlockState() {
+    @NotNull public CompoundTag getBlockState() {
         return this.blockState;
     }
 
     public static BlockWrapper of(@NotNull final BlockData blockData) {
-        return new BlockWrapper(blockData, new byte[0]);
+        return new BlockWrapper(BukkitAdapter.adapt(blockData), EMPTY);
+    }
+
+    public static BlockWrapper of(@NotNull final BlockState blockData, @NotNull final CompoundTag tag) {
+        return new BlockWrapper(blockData, tag);
+    }
+
+    public static BlockWrapper of(@NotNull final BlockData blockData, @NotNull final CompoundTag tag) {
+        return new BlockWrapper(BukkitAdapter.adapt(blockData), tag);
+    }
+
+    public static BlockWrapper of(@NotNull final BlockState blockData) {
+        return new BlockWrapper(blockData, EMPTY);
+    }
+
+    public static BlockWrapper of(@NotNull final BaseBlock baseBlock) {
+        return new BlockWrapper(baseBlock.toImmutableState(), baseBlock.getNbtData());
+    }
+
+    public static BlockWrapper of(@NotNull final Block block) {
+        return of(BukkitAdapter.adapt(block.getWorld()).getFullBlock(BukkitAdapter.asBlockVector(block.getLocation())));
     }
 
 }
