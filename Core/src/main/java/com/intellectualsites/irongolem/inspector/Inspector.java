@@ -100,7 +100,8 @@ public class Inspector {
                } else {
                    player.sendMessage("yay, starting restoration");
                    try {
-                       IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes, PlayerSource.of(player), () -> player.sendMessage("am done"));
+                       IronGolem.getPlugin(IronGolem.class).getRestorationHandler().restore(changes.optimize(),
+                           PlayerSource.of(player), () -> player.sendMessage("am done"));
                    } catch (final RegionLockedException e) {
                        e.printStackTrace();
                    }

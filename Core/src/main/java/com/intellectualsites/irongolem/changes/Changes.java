@@ -106,4 +106,34 @@ public class Changes {
         return true;
     }
 
+    /**
+     * Create a new optimized change set. This
+     * will not alter the current change set.
+     * Optimizations may include region minimization
+     * and merging of block states, or it may not do
+     * anything. It depends on the data that is
+     * present in the current change set.
+     *
+     * @return Optimized change set.
+     */
+    @NotNull public Changes optimize() {
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int minZ = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        int maxZ = Integer.MIN_VALUE;
+        for (final Vector vector : this.changes.keys()) {
+            minX = Math.min(minX, vector.getBlockX());
+            minY = Math.min(minY, vector.getBlockY());
+            minZ = Math.min(minZ, vector.getBlockZ());
+            maxX = Math.max(maxX, vector.getBlockX());
+            maxY = Math.max(maxY, vector.getBlockY());
+            maxZ = Math.max(maxZ, vector.getBlockZ());
+        }
+        final CuboidRegion region = CuboidRegion.of(new Vector(minX, minY, minZ),
+            new Vector(minX, minY, minZ));
+        return new Changes(region, this.world, this.changes.values());
+    }
+
 }
